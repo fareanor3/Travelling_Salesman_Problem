@@ -1,4 +1,5 @@
 #include "ShortestPath.h"
+#include "Settings.h"
 
 Path *Graph_shortestPath(Graph *graph, int start, int end)
 {
@@ -116,7 +117,8 @@ Path *Path_create(int start)
 
 void Path_destroy(Path *path)
 {
-    if (path == NULL) return;
+    if (path == NULL)
+        return;
 
     ListInt_destroy(path->list);
     free(path);
