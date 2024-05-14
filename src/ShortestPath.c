@@ -1,5 +1,4 @@
 #include "ShortestPath.h"
-#include "Settings.h"
 
 Path *Graph_shortestPath(Graph *graph, int start, int end)
 {
@@ -33,50 +32,60 @@ void Graph_dijkstra(Graph *graph, int start, int end, int *predecessors, float *
     assert(0 <= start && start < size);
     assert(end < size);
 
-    bool *explored = (bool *)calloc(Graph_size(graph), sizeof(bool));
+    bool *explored = (bool *)calloc(size, sizeof(bool));
     AssertNew(explored);
 
+    Heap *priorityQueue = create_heap(size);
+    AssertNew(priorityQueue);
+
+    // Initialization of distances and predecessors
     for (int i = 0; i < size; i++)
     {
         predecessors[i] = -1;
         distances[i] = INFINITY;
     }
     distances[start] = 0.0f;
+    // Add the start node to the heap
+    insert_heap(priorityQueue, 0.0f, start);
 
-    while (true)
+    while (priorityQueue->size > 0)
     {
-        // Recherche le noeud de distance minimale
-        int currID = -1;
-        float currDist = INFINITY;
-        for (int i = 0; i < size; ++i)
-        {
-            if (explored[i] == false && distances[i] < currDist)
-            {
-                currDist = distances[i];
-                currID = i;
-            }
-        }
+        // Remove the first element from the heap
+        BinNode minNode = delete_min(priorityQueue);
 
-        // Condition d'arret
-        if (currID < 0 || currID == end)
-            break;
-
+        // Mark the node as explored
+        int currID = minNode.data;
+        if (explored[currID])
+            continue;
         explored[currID] = true;
 
-        // Met à jour les voisins
-        for (ArcList *arc = Graph_getArcList(graph, currID);
-             arc != NULL; arc = arc->next)
+        // If we have reached the destination
+        if (currID == end)
+            break;
+        ArcList *successors = Graph_getArcList(graph, currID);
+
+        while (successors)
         {
-            int nextID = arc->target;
-            float dist = distances[currID] + arc->weight;
-            if (distances[nextID] > dist)
+            // Update distances and predecessors
+            if (!explored[successors->target])
             {
-                distances[nextID] = dist;
-                predecessors[nextID] = currID;
+                // Update distances and predecessors only if the node is not explored
+                float newDist = distances[currID] + successors->weight;
+                if (newDist < distances[successors->target])
+                {
+                    distances[successors->target] = newDist;
+                    predecessors[successors->target] = currID;
+                    insert_heap(priorityQueue, newDist, successors->target);
+                }
             }
+
+            successors = successors->next;
         }
+        free(successors);
     }
+
     free(explored);
+    destroy_heap(priorityQueue);
 }
 
 Path *Graph_dijkstraGetPath(int *predecessors, float *distances, int end)

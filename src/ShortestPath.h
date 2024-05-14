@@ -3,6 +3,7 @@
 #include "Settings.h"
 #include "Graph.h"
 #include "ListInt.h"
+#include "BinaryTree.h"
 
 /// @brief Structure représentant un chemin dans un graphe.
 typedef struct Path
@@ -34,7 +35,7 @@ void Path_print(Path *path);
 /// Si aucun chemin n'existe, renvoie NULL.
 /// Cette fonction suit l'algorithme de Dijkstra.
 /// Elle a une complexité en O(n^2) où n désigne le nombre de noeuds du graphe.
-/// 
+///
 /// @param graph le graphe.
 /// @param start l'identifiant du sommet de départ.
 /// @param end l'identifiant du sommet d'arrivée.
@@ -48,7 +49,7 @@ Path *Graph_shortestPath(Graph *graph, int start, int end);
 /// predecessors et distances en utilisant la fonction Graph_dijkstraGetPath().
 /// Si end < 0, l'algorithme calcule un plus court chemin pour chaque noeud
 /// accessible depuis start.
-/// 
+///
 /// @param graph le graphe.
 /// @param start l'identifiant du sommet de départ.
 /// @param end l'identifiant du sommet d'arrivée ou un entier < 0 pour calculer
@@ -63,7 +64,7 @@ void Graph_dijkstra(Graph *graph, int start, int end, int *predecessors, float *
 
 /// @brief Reconstruit un chemin à partir de la sortie de l'algorithme de
 /// Dijkstra.
-/// 
+///
 /// @param predecessors tableau des prédecesseurs.
 /// @param distances tableau des distances.
 /// @param end noeud d'arrivée.

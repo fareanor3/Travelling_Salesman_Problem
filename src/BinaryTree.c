@@ -36,13 +36,14 @@ void insert_heap(Heap *heap, float value, int data)
 {
     if (heap == NULL || heap->size >= heap->capacity)
     {
-        // invalid heap or heap is full, do nothing
+        // Invalid heap or heap is full, do nothing
         return;
     }
     int index = heap->size;
     heap->size++;
     heap->root[index].value = value;
     heap->root[index].data = data;
+
     // Percolate up
     while (index > 0 && heap->root[(index - 1) / 2].value > heap->root[index].value)
     {
@@ -54,24 +55,23 @@ void insert_heap(Heap *heap, float value, int data)
     }
 }
 
-// Supprime la racine du tas binaire (l'�l�ment le plus petit) et retourne sa valeur ; pour supprimer retir le premier et réinsert le dernier à la place
-
+// Supprime la racine du tas binaire (l'élément le plus petit) et retourne sa valeur ; pour supprimer retir le premier et réinsert le dernier à la place
 BinNode delete_min(Heap *heap)
 {
     if (heap == NULL || heap->size == 0)
     {
-        // invalid heap or heap is empty, return NULL
-        printf("heap is empty or not exist\n");
+        // Invalid heap or heap is empty, return a default BinNode
         return (BinNode){0};
     }
 
-    // sauvegarde la racine pour la retourner à la fin de la fonction
+    // Save the root node to return at the end of the function
     BinNode min_node = heap->root[0];
-    // deplace le noeud de la derniere position vers la racine
+
+    // Move the last node to the root position
     heap->root[0] = heap->root[heap->size - 1];
     heap->size--;
 
-    // percolate down pour maintenir la propriété du tas
+    // Percolate down to maintain the heap property
     int index = 0;
     while (index * 2 + 1 < heap->size)
     {
@@ -86,20 +86,19 @@ BinNode delete_min(Heap *heap)
 
         if (heap->root[index].value > heap->root[min_child_index].value)
         {
-            // swap parent and child nodes
+            // Swap parent and child nodes
             BinNode temp = heap->root[index];
             heap->root[index] = heap->root[min_child_index];
             heap->root[min_child_index] = temp;
-            // move down to child node
+            // Move down to child node
             index = min_child_index;
         }
         else
         {
-            // heap order property is satisfied, stop percolating down
+            // Heap order property is satisfied, stop percolating down
             break;
         }
     }
-
     return min_node;
 }
 
