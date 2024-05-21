@@ -1,6 +1,5 @@
 {
     "files.associations": {
-        "graph.h": "c",
-        "iterator": "c"
+        "graph.h": "c"
     }
 }

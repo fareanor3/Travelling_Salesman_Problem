@@ -51,7 +51,7 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
     bool *visited = (bool *)calloc(size, sizeof(bool));
     if (visited == NULL)
     {
-        printf("Problem allocating the visited array");
+        printf("Problème avec l'allocation du tableau passage");
         Path_destroy(tournee);
         return NULL;
     }
@@ -59,21 +59,22 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
     // Iterate until all nodes have been visited
     while (tournee->list->nodeCount < size)
     {
-        visited[prev] = true;
-        int nextNode = -1;
-        float minWeight = INFINITY;
+        passage[prev] = true;
+        // printf("Voici le point actuel %d -> ", prev);
+        int follower = -1;
+        float weight = INFINITY;
 
-        // Get the list of arcs from the current node
-        ArcList *arcList = Graph_getArcList(graph, prev);
-        if (arcList == NULL)
+        // On récupère la liste des noeuds accessibles par le point auquel on est
+        ArcList *arclist = Graph_getArcList(graph, prev);
+        if (arclist == NULL)
         {
-            printf("Problem with the arc list");
-            free(visited);
+            printf("Problème avec la liste des arcs");
+            free(passage);
             Path_destroy(tournee);
             return NULL;
         }
 
-        // Iterate through the arcs to find the closest unvisited node
+        // On va chercher les points accessibles par celui sur lequel on est actuellement
         for (int i = 0; i < Graph_getArcCount(graph, prev); i++)
         {
             if (!visited[arcList->target] && arcList->weight < minWeight)
@@ -86,8 +87,8 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
 
         if (nextNode == -1)
         {
-            printf("No following node found, there might be a problem in the graph");
-            free(visited);
+            printf("Aucun point suivant trouvé, il y a peut-être un problème dans le graph");
+            free(passage);
             Path_destroy(tournee);
             return NULL;
         }
@@ -95,13 +96,30 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
         // Add the closest node to the path
         ListInt_insertLast(tournee->list, nextNode);
 
-        // Add the distance
-        tournee->distance += minWeight;
-        prev = nextNode;
+        // On ajoute la distance
+        // printf("Voici le follower %d\n", follower);
+        tournee->distance += weight;
+        prev = follower;
+
+        // On ajoute la node de début à la fin afin de rentrer
+        if (tournee->list->nodeCount == size)
+        {
+            arclist = Graph_getArcList(graph, follower);
+            while (arclist != NULL)
+            {
+                // On vérifie si on a atteint le lien entre le dernier point et le premier afin de boucler
+                if (arclist->target == station)
+                {
+                    tournee->distance += arclist->weight;
+                    ListInt_insertLast(tournee->list, station);
+                }
+                arclist = arclist->next;
+            }
+        }
     }
 
-    // Free the visited array and return the path
-    free(visited);
+    // On fait nos free et on renvoit le path
+    free(passage);
     return tournee;
 }
 
