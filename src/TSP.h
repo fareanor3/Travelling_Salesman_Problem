@@ -10,7 +10,13 @@ typedef struct PathMatrix
 } PathMatrix;
 
 /// @brief Crée une matrice de chemins.
+/// @param size la taille de la matrice.
+/// @return La matrice de chemins.
 PathMatrix *PathMatrix_create(int size);
+
+/// @brief Détruit une matrice de chemins.
+/// @param matrix la matrice de chemins.
+void PathMatrix_destroy(PathMatrix *matrix);
 
 /// @brief Calcule une tounée dans un graphe en se basant sur un algorithme glouton.
 /// @param graph le graphe des distances. Il doit être complet.
@@ -18,7 +24,7 @@ PathMatrix *PathMatrix_create(int size);
 /// @return La tournée.
 Path *Graph_tspFromHeuristic(Graph *graph, int station);
 
-/// @brief Calcule une tounée dans un graphe en se basant sur l'algorithme d'optimisation ACO.
+/// @brief Calcule une tournée dans un graphe en se basant sur l'algorithme d'optimisation ACO.
 /// @param graph le graphe des distances. Il doit être complet.
 /// @param station l'identifiant du sommet de départ et d'arrivée de la tournée.
 /// @param iterationCount le nombre d'itération de l'algorithme.

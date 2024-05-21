@@ -12,6 +12,19 @@ PathMatrix *PathMatrix_create(int size)
     return matrix;
 }
 
+void PathMatrix_destroy(PathMatrix *matrix)
+{
+    if (matrix == NULL)
+        return;
+
+    for (int i = 0; i < matrix->size; i++)
+    {
+        free(matrix->matrix[i]);
+    }
+    free(matrix->matrix);
+    free(matrix);
+}
+
 Path *Graph_tspFromHeuristic(Graph *graph, int station)
 {
     int size = Graph_size(graph);
@@ -82,6 +95,7 @@ Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
                 pathMatrix->matrix[j][i] = *path;
                 Graph_setArc(subGraph, i, j, path->distance);
                 Graph_setArc(subGraph, j, i, path->distance);
+                Path_destroy(path);
             }
         }
     }
