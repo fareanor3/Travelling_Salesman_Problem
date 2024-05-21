@@ -18,7 +18,8 @@ ListInt *ListInt_create()
 
 void ListInt_destroy(ListInt *list)
 {
-    if (list == NULL) return;
+    if (list == NULL)
+        return;
 
     ListIntNode *sentinel = &(list->sentinel);
     ListIntNode *curr = sentinel->next;
@@ -90,6 +91,20 @@ void ListInt_insertNodeAfter(ListInt *list, ListIntNode *ref, ListIntNode *node)
     list->nodeCount++;
 }
 
+int ListInt_get(ListInt *list, int index)
+{
+    assert(list);
+    assert(index >= 0 && index < list->nodeCount);
+
+    ListIntNode *sentinel = &(list->sentinel);
+    ListIntNode *node = sentinel->next;
+    for (int i = 0; i < index; i++)
+    {
+        node = node->next;
+    }
+    return node->value;
+}
+
 int ListInt_getFirst(ListInt *list)
 {
     return list->sentinel.next->value;
@@ -150,7 +165,8 @@ int ListInt_isIn(ListInt *list, int element)
     ListIntNode *node = sentinel->next;
     while (node != sentinel)
     {
-        if (node->value == element) return true;
+        if (node->value == element)
+            return true;
         node = node->next;
     }
     return false;
@@ -197,7 +213,6 @@ void ListInt_concatenate(ListInt *list1, ListInt *list2)
     sentinel2->prev = sentinel2;
 }
 
-
 ListIntIter *ListIntIter_create(ListInt *list)
 {
     assert(list);
@@ -213,7 +228,8 @@ ListIntIter *ListIntIter_create(ListInt *list)
 
 void ListIntIter_destroy(ListIntIter *iter)
 {
-    if (!iter) return;
+    if (!iter)
+        return;
 
     free(iter);
 }
