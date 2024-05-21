@@ -3,6 +3,12 @@
 #include "Graph.h"
 #include "ShortestPath.h"
 
+typedef struct PathMatrix
+{
+    Path ***matrix;
+    int size;
+} PathMatrix;
+
 /// @brief Calcule une tounée dans un graphe en se basant sur un algorithme glouton.
 /// @param graph le graphe des distances. Il doit être complet.
 /// @param station l'identifiant du sommet de départ et d'arrivée de la tournée.
@@ -54,3 +60,5 @@ void Graph_acoPheromoneUpdatePath(Graph *pheromones, Path *path, float q);
 /// @param pheromones le graphe des phéromones.
 /// @param rho le coefficient d'évaporation des phéromones (entre 0.f et 1.f).
 void Graph_acoPheromoneGlobalUpdate(Graph *pheromones, float rho);
+
+Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix **pathMatrix);
