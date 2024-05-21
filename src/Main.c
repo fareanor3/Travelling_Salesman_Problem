@@ -9,6 +9,9 @@
 
 int main()
 {
+
+    srand((unsigned int)time(NULL));
+
     Graph *graph = Graph_load(File);
     if (graph == NULL)
     {

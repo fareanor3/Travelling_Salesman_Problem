@@ -3,11 +3,13 @@
 PathMatrix *PathMatrix_create(int size)
 {
     PathMatrix *matrix = (PathMatrix *)calloc(1, sizeof(PathMatrix));
+    AssertNew(matrix);
     matrix->size = size;
     matrix->matrix = (Path **)calloc(size, sizeof(Path *));
     for (int i = 0; i < size; i++)
     {
         matrix->matrix[i] = (Path *)calloc(size, sizeof(Path));
+        AssertNew(matrix->matrix[i]);
     }
     return matrix;
 }
@@ -27,87 +29,87 @@ void PathMatrix_destroy(PathMatrix *matrix)
 
 Path *Graph_tspFromHeuristic(Graph *graph, int station)
 {
+    assert(graph);
+
     int size = graph->size;
-    if ((station < 0) || (station >= size) || (graph == NULL)) // Corrected the condition to include (station == size)
+    if ((station < 0) || (station >= size) || (graph == NULL))
     {
-        printf("Problème avec le sommet de départ ou le graph");
+        printf("Problem with the starting vertex or the graph");
         return NULL;
     }
     int prev = station;
 
-    // On crée un path
+    // Create a path
     Path *tournee = Path_create(station);
     if (tournee == NULL)
     {
-        printf("Problème avec la création du path");
+        printf("Problem with creating the path");
         return NULL;
     }
 
-    // On crée un tableau qui permet de savoir si on est déjà passé quelque part
-    bool *passage = (bool *)calloc(size, sizeof(bool));
-    if (passage == NULL)
+    // Create an array to track if a node has been visited
+    bool *visited = (bool *)calloc(size, sizeof(bool));
+    if (visited == NULL)
     {
-        printf("Problème avec l'allocation du tableau passage");
-        Path_destroy(tournee); // Assume this function frees all memory associated with the path
+        printf("Problem allocating the visited array");
+        Path_destroy(tournee);
         return NULL;
     }
 
-    // On tourne tant qu'on n'a pas visité tout les noeuds
+    // Iterate until all nodes have been visited
     while (tournee->list->nodeCount < size)
     {
-        passage[prev] = true;
-        int follower = -1;
-        float weight = INFINITY;
-        // On va chercher les points accessibles par celui sur lequel on est actuellement
+        visited[prev] = true;
+        int nextNode = -1;
+        float minWeight = INFINITY;
 
-        ArcList *arclist = Graph_getArcList(graph, prev); // Get the arc list once per node
-        if (arclist == NULL)
+        // Get the list of arcs from the current node
+        ArcList *arcList = Graph_getArcList(graph, prev);
+        if (arcList == NULL)
         {
-            printf("Problème avec la liste des arcs");
-            free(passage);
-            Path_destroy(tournee); // Assume this function frees all memory associated with the path
+            printf("Problem with the arc list");
+            free(visited);
+            Path_destroy(tournee);
             return NULL;
         }
 
+        // Iterate through the arcs to find the closest unvisited node
         for (int i = 0; i < Graph_getArcCount(graph, prev); i++)
         {
-            if (passage[arclist->target] == false)
+            if (!visited[arcList->target] && arcList->weight < minWeight)
             {
-                // On vérifie si ce nouvel arc est plus léger que l'ancien ou pas
-                if (arclist->weight < weight)
-                {
-                    follower = arclist->target;
-                    weight = arclist->weight;
-                }
+                nextNode = arcList->target;
+                minWeight = arcList->weight;
             }
-            arclist = arclist->next;
+            arcList = arcList->next;
         }
 
-        if (follower == -1)
+        if (nextNode == -1)
         {
-            printf("Aucun point suivant trouvé, il y a peut-être un problème dans le graphe");
-            free(passage);
-            Path_destroy(tournee); // Assume this function frees all memory associated with the path
+            printf("No following node found, there might be a problem in the graph");
+            free(visited);
+            Path_destroy(tournee);
             return NULL;
         }
 
-        // On rajoute au chemin le point le plus proche de celui dont on est parti
-        ListInt_insertLast(tournee->list, follower);
+        // Add the closest node to the path
+        ListInt_insertLast(tournee->list, nextNode);
 
-        // On ajoute la distance
-        tournee->distance += weight;
-        prev = follower;
+        // Add the distance
+        tournee->distance += minWeight;
+        prev = nextNode;
     }
-    // On fait nos free et on renvoit le path
-    free(passage);
+
+    // Free the visited array and return the path
+    free(visited);
     return tournee;
 }
 
 Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
 {
-    assert(graph || list || ListInt_size(list) > 0);
+    assert(graph && list && ListInt_size(list) > 0);
 
-    int size = ListInt_size(list);
+    const int size = ListInt_size(list);
     Graph *subGraph = Graph_create(size);
 
     for (int i = 0; i < size; i++)
@@ -116,7 +118,7 @@ Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
         {
             if (i == j)
             {
-                pathMatrix->matrix[i][j].distance = 0;
+                pathMatrix->matrix[i][j].distance = 0.f;
             }
             else if (i < j)
             {
@@ -132,4 +134,103 @@ Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
         }
     }
     return subGraph;
+}
+
+float *Graph_acoGetProbabilities(Graph *graph, Graph *pheromones, int station, bool *explored, float alpha, float beta)
+{
+    assert(graph && pheromones && explored);
+
+    const int size = Graph_size(graph);
+    float *probabilities = (float *)calloc(size, sizeof(float));
+    float sum = 0.f;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (!explored[i])
+        {
+            probabilities[i] = powf(*Graph_getArc(pheromones, station, i), alpha) * powf(1.f / *Graph_getArc(graph, station, i), beta);
+            sum += probabilities[i];
+        }
+    }
+    for (int i = 0; i < size; i++)
+    {
+        probabilities[i] /= sum;
+    }
+
+    return probabilities;
+}
+
+Path *Graph_acoConstructPath(Graph *graph, Graph *pheromones, int station, float alpha, float beta)
+{
+    assert(graph && pheromones);
+
+    int size = Graph_size(graph);
+    Path *path = Path_create(station);
+    bool *explored = (bool *)calloc(size, sizeof(bool));
+    int prev = station;
+
+    while (path->list->nodeCount < size)
+    {
+        explored[prev] = true;
+        float *probabilities = Graph_acoGetProbabilities(graph, pheromones, prev, explored, alpha, beta);
+
+#ifdef _MSC_VER
+        const float random = ((float)(rand() << 16) + (float)(rand() & 0xFFFFF)) / (float)RAND_MAX;
+#else
+        const float random = (float)rand() / (float)RAND_MAX;
+#endif
+        float sum = 0.f;
+        int next = -1;
+
+        for (int i = 0; i < size; i++)
+        {
+            if (!explored[i])
+            {
+                sum += probabilities[i];
+                if (random <= sum)
+                {
+                    next = i;
+                    break;
+                }
+            }
+        }
+
+        ListInt_insertLast(path->list, next);
+        path->distance += *Graph_getArc(graph, prev, next);
+        prev = next;
+        free(probabilities);
+    }
+
+    free(explored);
+    return path;
+}
+
+void Graph_acoPheromoneUpdatePath(Graph *const pheromones, Path *const path, float q)
+{
+    assert(pheromones && path);
+
+    const float w = q / path->distance;
+
+    int size = path->list->nodeCount;
+    for (int i = 0; i < size - 1; i++)
+    {
+        int u = ListInt_get(path->list, i);
+        int v = ListInt_get(path->list, i + 1);
+        *Graph_getArc(pheromones, u, v) += w;
+    }
+}
+
+void Graph_acoPheromoneGlobalUpdate(Graph *const pheromones, float rho)
+{
+    assert(pheromones);
+    const float c = 1.f - rho;
+
+    const int size = Graph_size(pheromones);
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            *Graph_getArc(pheromones, i, j) *= c;
+        }
+    }
 }

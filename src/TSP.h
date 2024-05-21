@@ -1,4 +1,7 @@
 #pragma once
+#include <time.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include "Graph.h"
 #include "ShortestPath.h"
@@ -63,12 +66,12 @@ Path *Graph_acoConstructPath(Graph *graph, Graph *pheromones, int station, float
 /// @param pheromones le graphe des phéromones.
 /// @param path la tournée de la fourmi.
 /// @param q un réel positif qui contôle la quantité de phéromones déposées par la fourmi.
-void Graph_acoPheromoneUpdatePath(Graph *pheromones, Path *path, float q);
+void Graph_acoPheromoneUpdatePath(Graph *const pheromones, Path *const path, float q);
 
 /// @brief Applique l'évaporation des phéromones à la fin d'une itération de l'algorithme ACO.
 /// @param pheromones le graphe des phéromones.
 /// @param rho le coefficient d'évaporation des phéromones (entre 0.f et 1.f).
-void Graph_acoPheromoneGlobalUpdate(Graph *pheromones, float rho);
+void Graph_acoPheromoneGlobalUpdate(Graph *const pheromones, float rho);
 
 /// @brief Obtenir le sous-graphe de graph
 /// @param graph la graph dont on ne veut garder que les points d'intérêts
