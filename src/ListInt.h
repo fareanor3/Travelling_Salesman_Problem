@@ -50,6 +50,8 @@ bool ListInt_isEmpty(ListInt *list);
 void ListInt_print(ListInt *list);
 
 /// @brief Renvoie le noeud d'une liste à un index donné.
+/// @param list la liste.
+/// @param index l'index du noeud.
 int ListInt_get(ListInt *list, int index);
 
 /// @brief Renvoie le premier entier d'une liste.

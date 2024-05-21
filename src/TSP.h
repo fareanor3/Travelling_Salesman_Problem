@@ -5,9 +5,12 @@
 
 typedef struct PathMatrix
 {
-    Path ***matrix;
+    Path **matrix;
     int size;
 } PathMatrix;
+
+/// @brief Crée une matrice de chemins.
+PathMatrix *PathMatrix_create(int size);
 
 /// @brief Calcule une tounée dans un graphe en se basant sur un algorithme glouton.
 /// @param graph le graphe des distances. Il doit être complet.
@@ -61,4 +64,9 @@ void Graph_acoPheromoneUpdatePath(Graph *pheromones, Path *path, float q);
 /// @param rho le coefficient d'évaporation des phéromones (entre 0.f et 1.f).
 void Graph_acoPheromoneGlobalUpdate(Graph *pheromones, float rho);
 
-Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix **pathMatrix);
+/// @brief Obtenir le sous-graphe de graph
+/// @param graph la graph dont on ne veut garder que les points d'intérêts
+/// @param list la liste des points à parcourir
+/// @param pathMatrix une matrice des chemins
+/// @return le sous-graph
+Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix);

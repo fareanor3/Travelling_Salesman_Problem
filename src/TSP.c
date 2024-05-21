@@ -1,9 +1,17 @@
 #include "TSP.h"
 
-/// @brief Calcule une tounée dans un graphe en se basant sur un algorithme glouton.
-/// @param graph le graphe des distances. Il doit être complet.
-/// @param station l'identifiant du sommet de départ et d'arrivée de la tournée.
-/// @return La tournée.
+PathMatrix *PathMatrix_create(int size)
+{
+    PathMatrix *matrix = (PathMatrix *)calloc(1, sizeof(PathMatrix));
+    matrix->size = size;
+    matrix->matrix = (Path **)calloc(size, sizeof(Path *));
+    for (int i = 0; i < size; i++)
+    {
+        matrix->matrix[i] = (Path *)calloc(size, sizeof(Path));
+    }
+    return matrix;
+}
+
 Path *Graph_tspFromHeuristic(Graph *graph, int station)
 {
     int size = Graph_size(graph);
@@ -50,14 +58,32 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
     return path;
 }
 
-Graph *Graph_getSubGraph(Graph *graph, ListInt *list)
+Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
 {
+    assert(graph || list || ListInt_size(list) > 0);
+
     int size = ListInt_size(list);
     Graph *subGraph = Graph_create(size);
 
     for (int i = 0; i < size; i++)
     {
+        for (int j = 0; j < size; j++)
+        {
+            if (i == j)
+            {
+                pathMatrix->matrix[i][j].distance = 0;
+            }
+            else if (i < j)
+            {
+                int id1 = ListInt_get(list, i);
+                int id2 = ListInt_get(list, j);
+                Path *path = Graph_shortestPath(graph, id1, id2);
+                pathMatrix->matrix[i][j] = *path;
+                pathMatrix->matrix[j][i] = *path;
+                Graph_setArc(subGraph, i, j, path->distance);
+                Graph_setArc(subGraph, j, i, path->distance);
+            }
+        }
     }
-    Graph_print(subGraph);
     return subGraph;
 }
