@@ -1,5 +1,47 @@
 #include "Interface.h"
 
+void Creation_Point(FILE *fichier, float latitude, float longitude, char *name)
+{
+    fprintf(fichier, "\t \t{\n");
+    fprintf(fichier, "\t \t \t\"type\": \"Feature\",\n");
+    fprintf(fichier, "\t \t \t\"geometry\": {\n");
+    fprintf(fichier, "\t \t \t \t\"type\": \"Point\",\n");
+    fprintf(fichier, "\t \t \t \t\"coordinates\": [%f, %f ]\n", latitude, longitude);
+    fprintf(fichier, "\t \t \t},\n");
+    fprintf(fichier, "\t \t \t\"properties\": {\n");
+    fprintf(fichier, "\t \t \t \t\"_umap_options\": {\n");
+    fprintf(fichier, "\t \t \t \t \t\"color\": \"#2196F3\",\n");
+    fprintf(fichier, "\t \t \t \t \t\"weight\": 6,\n");
+    fprintf(fichier, "\t \t \t \t \t\"iconClass\": \"Drop\",\n");
+    fprintf(fichier, "\t \t \t \t \t\"showLabel\": null\n");
+    fprintf(fichier, "\t \t \t \t},\n");
+    fprintf(fichier, "\t \t \t \t\"name\": \"%s\"\n", name);
+    fprintf(fichier, "\t \t \t}\n");
+    fprintf(fichier, "\t \t},\n");
+}
+
+void Creation_LineString(FILE *fichier, float latitude_1, float longitude_1, float latitude_2, float longitude_2)
+{
+    fprintf(fichier, "\t \t{\n");
+    fprintf(fichier, "\t \t \t\"type\": \"Feature\",\n");
+    fprintf(fichier, "\t \t \t\"geometry\": {\n");
+    fprintf(fichier, "\t \t \t \t\"type\": \"LineString\",\n");
+    fprintf(fichier, "\t \t \t \t\"coordinates\": [ \n");
+    fprintf(fichier, "\t \t \t \t \t[%f, %f],\n", latitude_1, longitude_1);
+    fprintf(fichier, "\t \t \t \t \t[%f, %f]\n", latitude_2, longitude_2);
+    fprintf(fichier, "\t \t \t \t \t]\n");
+    fprintf(fichier, "\t \t \t},\n");
+    fprintf(fichier, "\t \t \t\"properties\": {\n");
+    fprintf(fichier, "\t \t \t \t\"_umap_options\": {\n");
+    fprintf(fichier, "\t \t \t \t \t\"color\": \"#9C27B0\",\n");
+    fprintf(fichier, "\t \t \t \t \t\"weight\": 6,\n");
+    fprintf(fichier, "\t \t \t \t \t\"showLabel\": null\n");
+    fprintf(fichier, "\t \t \t \t},\n");
+    fprintf(fichier, "\t \t \t \t\"name\": \"Path\"\n");
+    fprintf(fichier, "\t \t \t}\n");
+    fprintf(fichier, "\t \t},\n");
+}
+
 int Creation_geojson(Path *path, int size)
 {
     int start = path->list->sentinel.next->value;
@@ -36,6 +78,7 @@ int Creation_geojson(Path *path, int size)
     fprintf(fichier, "{\n");
     fprintf(fichier, "\t\"type\": \"FeatureCollection\",\n");
     fprintf(fichier, "\t\"features\": [\n");
+    int nb_iter = 0;
     // ça crée en boucle des lignes entre 2 points
     for (ListIntNode *i = path->list->sentinel.next; i->value != end; i = i->next)
     {
@@ -47,46 +90,18 @@ int Creation_geojson(Path *path, int size)
         longitude_2 = longi[i->next->value];
 
         // Le tracé de la ligne entre le point actuel et le suivant
-        fprintf(fichier, "\t \t{\n");
-        fprintf(fichier, "\t \t \t\"type\": \"Feature\",\n");
-        fprintf(fichier, "\t \t \t\"geometry\": {\n");
-        fprintf(fichier, "\t \t \t \t\"type\": \"LineString\",\n");
-        fprintf(fichier, "\t \t \t \t\"coordinates\": [ \n");
-        fprintf(fichier, "\t \t \t \t \t[%f, %f],\n", latitude_1, longitude_1);
-        fprintf(fichier, "\t \t \t \t \t[%f, %f]\n", latitude_2, longitude_2);
-        fprintf(fichier, "\t \t \t \t \t]\n");
-        fprintf(fichier, "\t \t \t},\n");
-        fprintf(fichier, "\t \t \t\"properties\": {\n");
-        fprintf(fichier, "\t \t \t \t\"_umap_options\": {\n");
-        fprintf(fichier, "\t \t \t \t \t\"color\": \"#9C27B0\",\n");
-        fprintf(fichier, "\t \t \t \t \t\"weight\": 6,\n");
-        fprintf(fichier, "\t \t \t \t \t\"showLabel\": null\n");
-        fprintf(fichier, "\t \t \t \t},\n");
-        fprintf(fichier, "\t \t \t \t\"name\": \"Path\"\n");
-        fprintf(fichier, "\t \t \t}\n");
-        fprintf(fichier, "\t \t},\n");
+        Creation_LineString(fichier, latitude_1, longitude_1, latitude_2, longitude_2);
+        nb_iter++;
     }
-    // Le tracé du point de début
+    printf("%d\n", nb_iter);
+    // Le tracé du point de début grâce à la fonction ;-)
     latitude_1 = lati[start];
     longitude_1 = longi[start];
-    fprintf(fichier, "\t \t{\n");
-    fprintf(fichier, "\t \t \t\"type\": \"Feature\",\n");
-    fprintf(fichier, "\t \t \t\"geometry\": {\n");
-    fprintf(fichier, "\t \t \t \t\"type\": \"Point\",\n");
-    fprintf(fichier, "\t \t \t \t\"coordinates\": [%f, %f ]\n", latitude_1, longitude_1);
-    fprintf(fichier, "\t \t \t},\n");
-    fprintf(fichier, "\t \t \t\"properties\": {\n");
-    fprintf(fichier, "\t \t \t \t\"_umap_options\": {\n");
-    fprintf(fichier, "\t \t \t \t \t\"color\": \"#2196F3\",\n");
-    fprintf(fichier, "\t \t \t \t \t\"weight\": 6,\n");
-    fprintf(fichier, "\t \t \t \t \t\"iconClass\": \"Drop\",\n");
-    fprintf(fichier, "\t \t \t \t \t\"showLabel\": null\n");
-    fprintf(fichier, "\t \t \t \t},\n");
-    fprintf(fichier, "\t \t \t \t\"name\": \"Start\"\n");
-    fprintf(fichier, "\t \t \t}\n");
-    fprintf(fichier, "\t \t},\n");
+    char *name = calloc(10, sizeof(char));
+    strcpy(name, "Start");
+    Creation_Point(fichier, latitude_1, longitude_1, name);
 
-    // Le tracé du point d'arrivée
+    // Le dernier point, afin qu'il n'est pas de virgule pour dire que c'est le dernier
     latitude_1 = lati[end];
     longitude_1 = longi[end];
     fprintf(fichier, "\t \t{\n");
@@ -104,11 +119,13 @@ int Creation_geojson(Path *path, int size)
     fprintf(fichier, "\t \t \t \t},\n");
     fprintf(fichier, "\t \t \t \t\"name\": \"End\"\n");
     fprintf(fichier, "\t \t \t}\n");
+    // Juste ici :-)
     fprintf(fichier, "\t \t}\n");
 
+    // La fermeture du fichier après toutes les features
     fprintf(fichier, "\t]\n");
     fprintf(fichier, "}\n");
-
+    free(name);
     free(lati);
     free(longi);
     fclose(fichier);
