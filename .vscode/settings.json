@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "graph.h": "c"
+        "graph.h": "c",
+        "binarytree.h": "c",
+        "listint.h": "c",
+        "shortestpath.h": "c"
     }
 }

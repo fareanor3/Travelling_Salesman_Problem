@@ -45,11 +45,10 @@ int main()
         return EXIT_FAILURE;
     }
     */
-    printf("Distance avec TSP : %f\n", path2->distance);
-    for (int i = 0; i < path2->list->nodeCount; i++)
+    printf("Distance avec TSP : %.1f\n", path2->distance);
+    for (ListIntNode *pnt = path2->list->sentinel.next; pnt != &path2->list->sentinel; pnt = pnt->next)
     {
-        int value = ListInt_popFirst(path2->list);
-        printf("%d ", value);
+        printf("%d ", pnt->value);
     }
     printf("\n");
     // Path_destroy(path);

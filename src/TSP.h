@@ -18,7 +18,7 @@ PathMatrix *PathMatrix_create(int size);
 /// @param matrix la matrice de chemins.
 void PathMatrix_destroy(PathMatrix *matrix);
 
-/// @brief Calcule une tounée dans un graphe en se basant sur un algorithme glouton.
+/// @brief Calcule une tounée dans un graphe en se basant sur un algorithme glouton. Ne pas oublier de mettre %.1f quand on imprime la valeur pour qu'elle soit à la bonne taille
 /// @param graph le graphe des distances. Il doit être complet.
 /// @param station l'identifiant du sommet de départ et d'arrivée de la tournée.
 /// @return La tournée.
