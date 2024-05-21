@@ -9,7 +9,9 @@ typedef struct PathMatrix
     int size;
 } PathMatrix;
 
-/// @brief Crée une matrice de chemins.
+/// @brief Crée une matrice de chemins
+/// @param size le nombre de noeuds à mettre dans la liste du chemin
+/// @return un PathMatrix correctement initialisé
 PathMatrix *PathMatrix_create(int size);
 
 /// @brief Calcule une tounée dans un graphe en se basant sur un algorithme glouton.
