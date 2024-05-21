@@ -10,7 +10,7 @@ typedef struct ArcList ArcList;
 struct Graph
 {
     /// @brief Tableau contenant les noeuds du graphe.
-    GraphNode* nodeList;
+    GraphNode *nodeList;
 
     /// @brief Nombre de noeuds du graphe.
     int size;
@@ -23,7 +23,7 @@ struct GraphNode
     int arcCount;
 
     /// @brief Liste des arcs sortants du noeud.
-    ArcList* arcList;
+    ArcList *arcList;
 };
 
 /// @brief Structure représentant une liste simplement chaînée des arcs sortants d'un noeud.
@@ -31,12 +31,16 @@ struct ArcList
 {
     /// @brief Pointeur vers l'élément suivant de la liste.
     /// Vaut NULL s'il s'agit du dernier élément.
-    ArcList* next;
+    ArcList *next;
 
     int target;
 
     float weight;
 };
+
+/// @brief libere l'ArcList
+/// @param arclist la liste d'arcs
+void ArcList_destroy(ArcList *arclist);
 
 /// @brief Crée un nouveau graphe.
 /// Le nombre de noeuds doit être défini au moment de la création et ne peut
@@ -55,7 +59,7 @@ void Graph_destroy(Graph *graph);
 Graph *Graph_load(char *filename);
 
 /// @brief Affiche le graphe.
-/// @param graph Le graphe 
+/// @param graph Le graphe
 void Graph_print(Graph *graph);
 
 /// @brief Renvoie le nombre de noeuds d'un graphe.

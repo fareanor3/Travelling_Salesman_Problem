@@ -15,8 +15,8 @@ int main()
         printf("Error loading the graph\n");
         return EXIT_FAILURE;
     }
-    int start = 1, end = 1608;
-    Path *path = Graph_shortestPath(graph, start, end);
+    // int start = 1, end = 1608;
+    // Path *path = Graph_shortestPath(graph, start, end);
 
     ListInt *list = ListInt_create();
     ListInt_insertLast(list, 482);
@@ -31,7 +31,7 @@ int main()
 
     Graph *graph2 = Graph_getSubGraph(graph, list, pathMatrix);
     Graph_print(graph2);
-    Path *path2 = Graph_tspFromHeuristic(graph2, start);
+    Path *path2 = Graph_tspFromHeuristic(graph2, 0);
     // Path_print(path);
     // Path_print(path2);
     /*
@@ -45,11 +45,19 @@ int main()
         return EXIT_FAILURE;
     }
     */
-    printf("Distance avec Dijkstra : %f, distance avec TSP : %f\n", path->distance, path2->distance);
-    Path_destroy(path);
+    printf("Distance avec TSP : %f\n", path2->distance);
+    for (int i = 0; i < path2->list->nodeCount; i++)
+    {
+        int value = ListInt_popFirst(path2->list);
+        printf("%d ", value);
+    }
+    printf("\n");
+    // Path_destroy(path);
     Path_destroy(path2);
     Graph_destroy(graph);
-
+    ListInt_destroy(list);
+    PathMatrix_destroy(pathMatrix);
+    Graph_destroy(graph2);
     // TODO : Afficher le chemin le plus court entre les noeuds 1 et 1608 : sauvegarder le chemin dans un fichier geojson puis le charger dans umap.openstreetmap.fr
 
     return EXIT_SUCCESS;

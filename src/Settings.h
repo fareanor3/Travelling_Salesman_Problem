@@ -11,12 +11,19 @@
 #include <stdint.h>
 #include <time.h>
 
-#define AssertNew(ptr) { if (ptr == NULL) { assert(false); abort(); } }
+#define AssertNew(ptr)     \
+    {                      \
+        if (ptr == NULL)   \
+        {                  \
+            assert(false); \
+            abort();       \
+        }                  \
+    }
 
 #ifdef _MSC_VER
-#  define INLINE inline
+#define INLINE inline
 #else
-#  define INLINE static inline
+#define INLINE static inline
 #endif
 
 INLINE int minInt(int a, int b) { return a < b ? a : b; }

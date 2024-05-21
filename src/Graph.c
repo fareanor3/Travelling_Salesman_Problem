@@ -1,5 +1,20 @@
 #include "Graph.h"
 
+void ArcList_destroy(ArcList *arclist)
+{
+    if (arclist == NULL)
+        return;
+
+    ArcList *currArc = arclist;
+    while (currArc != NULL)
+    {
+        ArcList *nextArc = currArc->next;
+        free(currArc);
+        currArc = nextArc;
+    }
+    free(arclist);
+}
+
 Graph *Graph_create(int size)
 {
     Graph *graph = (Graph *)calloc(1, sizeof(Graph));
@@ -23,7 +38,8 @@ Graph *Graph_create(int size)
 
 void Graph_destroy(Graph *graph)
 {
-    if (!graph) return;
+    if (!graph)
+        return;
 
     if (graph->nodeList)
     {
@@ -137,7 +153,6 @@ float *Graph_getArc(Graph *graph, int u, int v)
 
     return NULL;
 }
-
 
 Graph *Graph_load(char *filename)
 {

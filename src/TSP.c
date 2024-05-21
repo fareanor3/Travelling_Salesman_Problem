@@ -28,7 +28,7 @@ void PathMatrix_destroy(PathMatrix *matrix)
 Path *Graph_tspFromHeuristic(Graph *graph, int station)
 {
     int size = graph->size;
-    if ((station < 0) || (station > size) || (graph == NULL))
+    if ((station < 0) || (station >= size) || (graph == NULL)) // Corrected the condition to include (station == size)
     {
         printf("Problème avec le sommet de départ ou le graph");
         return NULL;
@@ -37,9 +37,20 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
 
     // On crée un path
     Path *tournee = Path_create(station);
+    if (tournee == NULL)
+    {
+        printf("Problème avec la création du path");
+        return NULL;
+    }
 
     // On crée un tableau qui permet de savoir si on est déjà passé quelque part
     bool *passage = (bool *)calloc(size, sizeof(bool));
+    if (passage == NULL)
+    {
+        printf("Problème avec l'allocation du tableau passage");
+        Path_destroy(tournee); // Assume this function frees all memory associated with the path
+        return NULL;
+    }
 
     // On tourne tant qu'on n'a pas visité tout les noeuds
     while (tournee->list->nodeCount < size)
@@ -48,9 +59,18 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
         int follower = -1;
         float weight = INFINITY;
         // On va chercher les points accessibles par celui sur lequel on est actuellement
+
+        ArcList *arclist = Graph_getArcList(graph, prev); // Get the arc list once per node
+        if (arclist == NULL)
+        {
+            printf("Problème avec la liste des arcs");
+            free(passage);
+            Path_destroy(tournee); // Assume this function frees all memory associated with the path
+            return NULL;
+        }
+
         for (int i = 0; i < Graph_getArcCount(graph, prev); i++)
         {
-            ArcList *arclist = Graph_getArcList(graph, prev);
             if (passage[arclist->target] == false)
             {
                 // On vérifie si ce nouvel arc est plus léger que l'ancien ou pas
@@ -61,6 +81,14 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
                 }
             }
             arclist = arclist->next;
+        }
+
+        if (follower == -1)
+        {
+            printf("Aucun point suivant trouvé, il y a peut-être un problème dans le graphe");
+            free(passage);
+            Path_destroy(tournee); // Assume this function frees all memory associated with the path
+            return NULL;
         }
 
         // On rajoute au chemin le point le plus proche de celui dont on est parti
