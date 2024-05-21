@@ -9,9 +9,9 @@ typedef struct PathMatrix
     int size;
 } PathMatrix;
 
-/// @brief Crée une matrice de chemins.
-/// @param size la taille de la matrice.
-/// @return La matrice de chemins.
+/// @brief Crée une matrice de chemins
+/// @param size le nombre de noeuds à mettre dans la liste du chemin
+/// @return un PathMatrix correctement initialisé
 PathMatrix *PathMatrix_create(int size);
 
 /// @brief Détruit une matrice de chemins.

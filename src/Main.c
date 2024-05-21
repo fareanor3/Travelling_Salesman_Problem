@@ -17,24 +17,38 @@ int main()
     }
     int start = 1, end = 1608;
     Path *path = Graph_shortestPath(graph, start, end);
-    Path_print(path);
-    // int test = Creation_geojson(path, Graph_size(graph));
-    PathMatrix *pathMatrix = PathMatrix_create(path->list->nodeCount);
-    Graph *subGraph = Graph_getSubGraph(graph, path->list, pathMatrix);
-    printf("Matrix entre le noeux 1 et 2: %f\n", pathMatrix->matrix[0][1].distance);
-    printf("Matrix entre le noeux 2 et 1: %f\n", pathMatrix->matrix[1][0].distance);
+
+    ListInt *list = ListInt_create();
+    ListInt_insertLast(list, 482);
+    ListInt_insertLast(list, 2504);
+    ListInt_insertLast(list, 733);
+    ListInt_insertLast(list, 826);
+    ListInt_insertLast(list, 172);
+    ListInt_insertLast(list, 2361);
+    ListInt_insertLast(list, 2605);
+
+    PathMatrix *pathMatrix = PathMatrix_create(7);
+
+    Graph *graph2 = Graph_getSubGraph(graph, list, pathMatrix);
+    Graph_print(graph2);
+    Path *path2 = Graph_tspFromHeuristic(graph2, start);
+    // Path_print(path);
+    // Path_print(path2);
     /*
+    int test = Creation_geojson(path, Graph_size(graph));
     if (test == 1)
     {
         printf("Problème dans la création du fichier geojson\n");
         Path_destroy(path);
+        Path_destroy(path2);
         Graph_destroy(graph);
         return EXIT_FAILURE;
     }
     */
+    printf("Distance avec Dijkstra : %f, distance avec TSP : %f\n", path->distance, path2->distance);
     Path_destroy(path);
+    Path_destroy(path2);
     Graph_destroy(graph);
-    Graph_destroy(subGraph);
 
     // TODO : Afficher le chemin le plus court entre les noeuds 1 et 1608 : sauvegarder le chemin dans un fichier geojson puis le charger dans umap.openstreetmap.fr
 

@@ -27,48 +27,52 @@ void PathMatrix_destroy(PathMatrix *matrix)
 
 Path *Graph_tspFromHeuristic(Graph *graph, int station)
 {
-    int size = Graph_size(graph);
-    assert(0 <= station && station < size);
-
-    bool *explored = (bool *)calloc(size, sizeof(bool));
-    AssertNew(explored);
-
-    Path *path = Path_create(station);
-
-    int curr = station;
-    while (path->list->nodeCount < size)
+    int size = graph->size;
+    if ((station < 0) || (station > size) || (graph == NULL))
     {
-        explored[curr] = true;
+        printf("Problème avec le sommet de départ ou le graph");
+        return NULL;
+    }
+    int prev = station;
 
-        Path *shortestPath = NULL;
-        for (int i = 0; i < size; i++)
+    // On crée un path
+    Path *tournee = Path_create(station);
+
+    // On crée un tableau qui permet de savoir si on est déjà passé quelque part
+    bool *passage = (bool *)calloc(size, sizeof(bool));
+
+    // On tourne tant qu'on n'a pas visité tout les noeuds
+    while (tournee->list->nodeCount < size)
+    {
+        passage[prev] = true;
+        int follower = -1;
+        float weight = INFINITY;
+        // On va chercher les points accessibles par celui sur lequel on est actuellement
+        for (int i = 0; i < Graph_getArcCount(graph, prev); i++)
         {
-            if (!explored[i])
+            ArcList *arclist = Graph_getArcList(graph, prev);
+            if (passage[arclist->target] == false)
             {
-                Path *p = Graph_shortestPath(graph, curr, i);
-                if (shortestPath == NULL || p->distance < shortestPath->distance)
+                // On vérifie si ce nouvel arc est plus léger que l'ancien ou pas
+                if (arclist->weight < weight)
                 {
-                    if (shortestPath != NULL)
-                    {
-                        Path_destroy(shortestPath);
-                    }
-                    shortestPath = p;
-                }
-                else
-                {
-                    Path_destroy(p);
+                    follower = arclist->target;
+                    weight = arclist->weight;
                 }
             }
+            arclist = arclist->next;
         }
 
-        curr = ListInt_getFirst(shortestPath->list);
-        ListInt_popFirst(shortestPath->list);
-        path->distance += shortestPath->distance;
+        // On rajoute au chemin le point le plus proche de celui dont on est parti
+        ListInt_insertLast(tournee->list, follower);
 
-        Path_destroy(shortestPath);
+        // On ajoute la distance
+        tournee->distance += weight;
+        prev = follower;
     }
-
-    return path;
+    // On fait nos free et on renvoit le path
+    free(passage);
+    return tournee;
 }
 
 Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
