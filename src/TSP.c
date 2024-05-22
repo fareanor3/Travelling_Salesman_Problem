@@ -235,6 +235,15 @@ Path *Graph_acoConstructPath(Graph *graph, Graph *pheromones, int station, float
         // sinon on ajoute le point suivant au path et on ajoute la distance
         ListInt_insertLast(path->list, next); //
         path->distance += *Graph_getArc(graph, prev, next);
+
+        // On ajoute la node de début à la fin afin de rentrer
+        if (path->list->nodeCount == size)
+        {
+            path->distance += *Graph_getArc(graph, prev, station);
+            next = station;
+            ListInt_insertLast(path->list, next);
+        }
+
         prev = next;         // on met à jour le point précédent
         free(probabilities); // on libère la mémoire
     }
