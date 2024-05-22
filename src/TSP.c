@@ -257,13 +257,16 @@ Path *Graph_tspFromACO(Graph *graph, int station, int iterationCount, int antCou
 
     const int size = Graph_size(graph);
     Graph *pheromones = Graph_create(size);
+
+    // initialisation des arc de phéromones : faire un glouton plus tard
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size; j++)
         {
-            *Graph_getArc(pheromones, i, j) = 1.f;
+            Graph_setArc(pheromones, i, j, 1);
         }
     }
+    printf("1");
 
     Path *bestPath = NULL;
     float bestDistance = INFINITY;
@@ -294,5 +297,6 @@ Path *Graph_tspFromACO(Graph *graph, int station, int iterationCount, int antCou
     }
 
     Graph_destroy(pheromones);
+
     return bestPath;
 }
