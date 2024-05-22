@@ -284,7 +284,12 @@ int Passage_TSPHeuristic()
     return 0;
 }
 
-// A tester dès que l'ACO fonctionne
+/*
+test 1 = 10.00/20
+test 2 = 10.00/20
+test 3 = 7.23/20
+test 4 = 9.39/20
+*/
 int Passage_TSPACO()
 {
     /*
@@ -309,8 +314,43 @@ int Passage_TSPACO()
         ListInt_insertLast(list, point);
     }
     Graph *graph = Graph_load(fpath);
+    PathMatrix *pathMatrix = PathMatrix_create(nb_points);
+    if ((graph == NULL) || (pathMatrix == NULL))
+    {
+        printf("Erreur en créant le graph ou le pathMatrix\n");
+        free(fpath);
+        free(fcoor);
+        ListInt_destroy(list);
+        PathMatrix_destroy(pathMatrix);
+        Graph_destroy(graph);
+        return EXIT_FAILURE;
+    }
 
-    Path *path = Graph_tspFromACO(graph, 0, 1000, 100, 2.0f, 3.0f, 0.1f, 2.0f);
+    Graph *sub_graph = Graph_getSubGraph(graph, list, pathMatrix);
+    if ((sub_graph == NULL))
+    {
+        printf("Erreur en créant le sous-graph ou le path\n");
+        free(fpath);
+        free(fcoor);
+        ListInt_destroy(list);
+        PathMatrix_destroy(pathMatrix);
+        Graph_destroy(graph);
+        Graph_destroy(sub_graph);
+        return EXIT_FAILURE;
+    }
+
+    Path *path = Graph_tspFromACO(sub_graph, 0, 1000, 100, 2.0f, 3.0f, 0.1f, 2.0f);
+    if ((path == NULL))
+    {
+        printf("Erreur en créant le sous-graph ou le path\n");
+        free(fpath);
+        free(fcoor);
+        ListInt_destroy(list);
+        PathMatrix_destroy(pathMatrix);
+        Graph_destroy(graph);
+        Graph_destroy(sub_graph);
+        return EXIT_FAILURE;
+    }
 
     printf("%.1f %d\n", path->distance, path->list->nodeCount);
     for (ListIntNode *pnt = path->list->sentinel.next; pnt != &path->list->sentinel; pnt = pnt->next)
@@ -321,6 +361,8 @@ int Passage_TSPACO()
     free(fcoor);
     ListInt_destroy(list);
     Path_destroy(path);
+    PathMatrix_destroy(pathMatrix);
     Graph_destroy(graph);
+    Graph_destroy(sub_graph);
     return 0;
 }
