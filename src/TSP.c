@@ -128,7 +128,7 @@ Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
     const int size = ListInt_size(list);
     Graph *subGraph = Graph_create(size);
 
-    // on parcour tous les points de la liste
+    // on parcourt tous les points de la liste
     for (int i = 0; i < size; i++)
     {
         // on récupère l'id du point
@@ -239,7 +239,7 @@ Path *Graph_acoConstructPath(Graph *graph, Graph *pheromones, int station, float
         // On ajoute la node de début à la fin afin de rentrer
         if (path->list->nodeCount == size)
         {
-            path->distance += *Graph_getArc(graph, prev, station);
+            path->distance += *Graph_getArc(graph, next, station);
             next = station;
             ListInt_insertLast(path->list, next);
         }
