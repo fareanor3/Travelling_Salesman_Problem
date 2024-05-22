@@ -73,8 +73,22 @@ int TestFonction(int NbTest)
     Path *path2 = Graph_tspFromHeuristic(graph2, 0);
     Path *path3 = Graph_tspFromACO(graph2, 0, 1000, 100, 2.0, 3.0, 0.1, 2.0);
 
+    float TailleOutPut = 0.0;
+    fscanf(fileOutpout, "%f", &TailleOutPut);
+    printf("Distance prévu ACO : %.1f\n", TailleOutPut);
     printf("Distance avec ACO : %.1f\n", path3->distance);
     printf("Distance avec TSP : %.1f\n", path2->distance);
+
+    int NbdeNode = 0;
+    fscanf(fileOutpout, "%d\n", &NbdeNode);
+    for (int i = 0; i < NbdeNode; i++)
+    {
+        int node = 0;
+        fscanf(fileOutpout, "%d", &node);
+        printf("%d ", node);
+    }
+    printf("\n");
+    fclose(fileOutpout);
 
     for (ListIntNode *pnt = path3->list->sentinel.next; pnt != &path3->list->sentinel; pnt = pnt->next)
     {
@@ -87,8 +101,6 @@ int TestFonction(int NbTest)
         printf("%d ", pnt->value);
     }
     printf("\n");
-
-    fclose(fileOutpout);
 
     Path_destroy(path2);
     Graph_destroy(graph);
