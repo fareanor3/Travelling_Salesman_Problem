@@ -1,0 +1,3 @@
+../Data/france_graph.txt
+../Data/france_inter.txt
+676685 4008013
