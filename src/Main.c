@@ -5,7 +5,7 @@
 #include "Interface.h"
 #include "TSP.h"
 
-#define File "../TPF_Donnees/Data/laval_graph.txt"
+#define File "../TPF_Donnees/Tests/5_Grande_instance/input.txt"
 
 int TestFonction(int NbTest)
 {
@@ -116,12 +116,86 @@ int main()
 {
     srand((unsigned int)time(NULL));
 
-    for (int i = 1; i < 5; i++)
+    // for (int i = 1; i < 5; i++)
+    // {
+    //     printf("###### Test %d ######\n", i);
+    //     TestFonction(i);
+    //     printf("\n");
+    // }
+
+    // demarre un timer
+    clock_t start = clock();
+
+    // test sur l'instance 5 (grande instance)
+    // Distance avec ACO : 4381038.5
+    // 0 30 15 35 21 23 34 27 10 4 19 7 33 11 22 32 14 16 17 13 31 9 3 12 2 6 8 20 5 28 36 26 25 18 29 24 1 0
+    // Time spent: 358.239159
+    printf("###### Test 5 ######\n");
+    FILE *file = fopen(File, "r");
+    if (file == NULL)
     {
-        printf("###### Test %d ######\n", i);
-        TestFonction(i);
-        printf("\n");
+        printf("Error opening the file\n");
+        return EXIT_FAILURE;
     }
+
+    char GraphFile[256];
+    char CoordFile[256];
+    int NbPoints = 0;
+
+    if (fscanf(file, "%s", GraphFile) != 1 || fscanf(file, "%s", CoordFile) != 1 || fscanf(file, "%d", &NbPoints) != 1)
+    {
+        printf("Error reading from the file\n");
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+
+    Graph *graph = Graph_load(GraphFile);
+    if (graph == NULL)
+    {
+        printf("Error loading the graph\n");
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+
+    ListInt *list = ListInt_create();
+    PathMatrix *pathMatrix = PathMatrix_create(NbPoints);
+
+    for (int i = 0; i < NbPoints; i++)
+    {
+        int point;
+        if (fscanf(file, "%d", &point) != 1)
+        {
+            printf("Error reading point from the file\n");
+            ListInt_destroy(list);
+            PathMatrix_destroy(pathMatrix);
+            Graph_destroy(graph);
+            fclose(file);
+            return EXIT_FAILURE;
+        }
+        ListInt_insertLast(list, point);
+    }
+
+    Graph *graph2 = Graph_getSubGraph(graph, list, pathMatrix);
+    Path *path2 = Graph_tspFromACO(graph2, 0, 1000, 100, 2.0, 3.0, 0.1, 2.0);
+    printf("Distance avec ACO : %.1f\n", path2->distance);
+    Creation_geojson(path2, path2->list->nodeCount);
+
+    for (ListIntNode *pnt = path2->list->sentinel.next; pnt != &path2->list->sentinel; pnt = pnt->next)
+    {
+        printf("%d ", pnt->value);
+    }
+    printf("\n");
+
+    Path_destroy(path2);
+    Graph_destroy(graph);
+    ListInt_destroy(list);
+    PathMatrix_destroy(pathMatrix);
+    Graph_destroy(graph2);
+
+    // arrete le timer
+    clock_t end = clock();
+    double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
+    printf("Time spent: %f\n", time_spent);
 
     return EXIT_SUCCESS;
 }
@@ -299,8 +373,8 @@ int Passage_TSPHeuristic()
 /*
 test 1 = 10.00/20
 test 2 = 10.00/20
-test 3 = 7.23/20
-test 4 = 9.39/20
+test 3 = 10.00/20
+test 4 = 10.31/20
 */
 int Passage_TSPACO()
 {
