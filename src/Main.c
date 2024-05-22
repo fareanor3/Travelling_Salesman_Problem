@@ -7,62 +7,109 @@
 
 #define File "../TPF_Donnees/Data/laval_graph.txt"
 
-int main()
+int TestFonction(int NbTest)
 {
+    char PathDebugFile[256];
+    snprintf(PathDebugFile, sizeof(PathDebugFile), "../TPF_Donnees/Tests/4_TSP_ACO/input%d.txt", NbTest);
 
-    srand((unsigned int)time(NULL));
+    FILE *file = fopen(PathDebugFile, "r");
+    if (file == NULL)
+    {
+        printf("Error opening the file\n");
+        return EXIT_FAILURE;
+    }
 
-    Graph *graph = Graph_load(File);
+    char PathOutpoutFile[256];
+    snprintf(PathOutpoutFile, sizeof(PathOutpoutFile), "../TPF_Donnees/Tests/4_TSP_ACO/output%d.txt", NbTest);
+
+    FILE *fileOutpout = fopen(PathOutpoutFile, "r");
+    if (fileOutpout == NULL)
+    {
+        printf("Error opening the file\n");
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+
+    char GraphFile[256];
+    char CoordFile[256];
+    int NbPoints;
+
+    if (fscanf(file, "%s", GraphFile) != 1 || fscanf(file, "%s", CoordFile) != 1 || fscanf(file, "%d", &NbPoints) != 1)
+    {
+        printf("Error reading from the file\n");
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+
+    Graph *graph = Graph_load(GraphFile);
     if (graph == NULL)
     {
         printf("Error loading the graph\n");
+        fclose(file);
         return EXIT_FAILURE;
     }
-    // int start = 1, end = 1608;
-    // Path *path = Graph_shortestPath(graph, start, end);
 
     ListInt *list = ListInt_create();
-    ListInt_insertLast(list, 482);
-    ListInt_insertLast(list, 2504);
-    ListInt_insertLast(list, 733);
-    ListInt_insertLast(list, 826);
-    ListInt_insertLast(list, 172);
-    ListInt_insertLast(list, 2361);
-    ListInt_insertLast(list, 2605);
+    PathMatrix *pathMatrix = PathMatrix_create(NbPoints);
 
-    PathMatrix *pathMatrix = PathMatrix_create(7);
-    pathMatrix->matrix[0][0].distance;
+    for (int i = 0; i < NbPoints; i++)
+    {
+        int point;
+        if (fscanf(file, "%d", &point) != 1)
+        {
+            printf("Error reading point from the file\n");
+            ListInt_destroy(list);
+            PathMatrix_destroy(pathMatrix);
+            Graph_destroy(graph);
+            fclose(file);
+            return EXIT_FAILURE;
+        }
+        ListInt_insertLast(list, point);
+    }
     Graph *graph2 = Graph_getSubGraph(graph, list, pathMatrix);
+
+    fclose(file);
+
     Path *path2 = Graph_tspFromHeuristic(graph2, 0);
     Path *path3 = Graph_tspFromACO(graph2, 0, 1000, 100, 2.0, 3.0, 0.1, 2.0);
-    // Path_print(path);
-    // Path_print(path2);
-    /*
-    int test = Creation_geojson(path, Graph_size(graph));
-    if (test == 1)
-    {
-        printf("Problème dans la création du fichier geojson\n");
-        Path_destroy(path);
-        Path_destroy(path2);
-        Graph_destroy(graph);
-        return EXIT_FAILURE;
-    }
-    */
+
     printf("Distance avec ACO : %.1f\n", path3->distance);
     printf("Distance avec TSP : %.1f\n", path2->distance);
+
+    for (ListIntNode *pnt = path3->list->sentinel.next; pnt != &path3->list->sentinel; pnt = pnt->next)
+    {
+        printf("%d ", pnt->value);
+    }
+    printf("\n");
+
     for (ListIntNode *pnt = path2->list->sentinel.next; pnt != &path2->list->sentinel; pnt = pnt->next)
     {
         printf("%d ", pnt->value);
     }
     printf("\n");
-    // Path_destroy(path);
+
+    fclose(fileOutpout);
+
     Path_destroy(path2);
     Graph_destroy(graph);
     ListInt_destroy(list);
     PathMatrix_destroy(pathMatrix);
     Graph_destroy(graph2);
     Path_destroy(path3);
-    // TODO : Afficher le chemin le plus court entre les noeuds 1 et 1608 : sauvegarder le chemin dans un fichier geojson puis le charger dans umap.openstreetmap.fr
+
+    return EXIT_SUCCESS;
+}
+
+int main()
+{
+    srand((unsigned int)time(NULL));
+
+    for (int i = 1; i < 5; i++)
+    {
+        printf("###### Test %d ######\n", i);
+        TestFonction(i);
+        printf("\n");
+    }
 
     return EXIT_SUCCESS;
 }
