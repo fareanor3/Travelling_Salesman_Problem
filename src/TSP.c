@@ -60,7 +60,6 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
     while (tournee->list->nodeCount < size)
     {
         passage[prev] = true;
-        // printf("Voici le point actuel %d -> ", prev);
         int follower = -1;
         float weight = INFINITY;
 
@@ -97,7 +96,6 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
         ListInt_insertLast(tournee->list, follower);
 
         // On ajoute la distance
-        // printf("Voici le follower %d\n", follower);
         tournee->distance += weight;
         prev = follower;
 
@@ -251,4 +249,50 @@ void Graph_acoPheromoneGlobalUpdate(Graph *const pheromones, float rho)
             *Graph_getArc(pheromones, i, j) *= c;
         }
     }
+}
+
+Path *Graph_tspFromACO(Graph *graph, int station, int iterationCount, int antCount, float alpha, float beta, float rho, float q)
+{
+    assert(graph);
+
+    const int size = Graph_size(graph);
+    Graph *pheromones = Graph_create(size);
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            *Graph_getArc(pheromones, i, j) = 1.f;
+        }
+    }
+
+    Path *bestPath = NULL;
+    float bestDistance = INFINITY;
+
+    for (int i = 0; i < iterationCount; i++)
+    {
+        for (int j = 0; j < antCount; j++)
+        {
+            Path *path = Graph_acoConstructPath(graph, pheromones, station, alpha, beta);
+            Graph_acoPheromoneUpdatePath(pheromones, path, q);
+
+            if (path->distance < bestDistance)
+            {
+                bestDistance = path->distance;
+                if (bestPath != NULL)
+                {
+                    Path_destroy(bestPath);
+                }
+                bestPath = path;
+            }
+            else
+            {
+                Path_destroy(path);
+            }
+        }
+
+        Graph_acoPheromoneGlobalUpdate(pheromones, rho);
+    }
+
+    Graph_destroy(pheromones);
+    return bestPath;
 }

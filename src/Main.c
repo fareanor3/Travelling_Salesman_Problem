@@ -33,8 +33,8 @@ int main()
     PathMatrix *pathMatrix = PathMatrix_create(7);
 
     Graph *graph2 = Graph_getSubGraph(graph, list, pathMatrix);
-    Graph_print(graph2);
     Path *path2 = Graph_tspFromHeuristic(graph2, 0);
+    Path *path3 = Graph_tspFromACO(graph2, 0, 1000, 100, 2.0, 3.0, 0.1, 2.0);
     // Path_print(path);
     // Path_print(path2);
     /*
@@ -48,6 +48,7 @@ int main()
         return EXIT_FAILURE;
     }
     */
+    printf("Distance avec ACO : %.1f\n", path3->distance);
     printf("Distance avec TSP : %.1f\n", path2->distance);
     for (ListIntNode *pnt = path2->list->sentinel.next; pnt != &path2->list->sentinel; pnt = pnt->next)
     {
@@ -60,6 +61,7 @@ int main()
     ListInt_destroy(list);
     PathMatrix_destroy(pathMatrix);
     Graph_destroy(graph2);
+    Path_destroy(path3);
     // TODO : Afficher le chemin le plus court entre les noeuds 1 et 1608 : sauvegarder le chemin dans un fichier geojson puis le charger dans umap.openstreetmap.fr
 
     return EXIT_SUCCESS;
