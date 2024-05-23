@@ -21,6 +21,10 @@ void PathMatrix_destroy(PathMatrix *matrix)
 
     for (int i = 0; i < matrix->size; i++)
     {
+        for (int j = 0; j < matrix->size; j++)
+        {
+            ListInt_destroy(matrix->matrix[i][j].list);
+        }
         free(matrix->matrix[i]);
     }
     free(matrix->matrix);
@@ -128,7 +132,7 @@ Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
     const int size = ListInt_size(list);
     Graph *subGraph = Graph_create(size);
 
-    // on parcourt tous les points de la liste
+    // on parcour tous les points de la liste
     for (int i = 0; i < size; i++)
     {
         // on récupère l'id du point
@@ -150,7 +154,7 @@ Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
                 pathMatrix->matrix[j][i] = *path;
                 Graph_setArc(subGraph, i, j, path->distance);
                 Graph_setArc(subGraph, j, i, path->distance);
-                Path_destroy(path);
+                free(path);
             }
         }
     }
@@ -235,18 +239,12 @@ Path *Graph_acoConstructPath(Graph *graph, Graph *pheromones, int station, float
         // sinon on ajoute le point suivant au path et on ajoute la distance
         ListInt_insertLast(path->list, next); //
         path->distance += *Graph_getArc(graph, prev, next);
-
-        // On ajoute la node de début à la fin afin de rentrer
-        if (path->list->nodeCount == size)
-        {
-            path->distance += *Graph_getArc(graph, next, station);
-            next = station;
-            ListInt_insertLast(path->list, next);
-        }
-
         prev = next;         // on met à jour le point précédent
         free(probabilities); // on libère la mémoire
     }
+    // on ajoute la node de début à la fin afin de rentrer
+    ListInt_insertLast(path->list, station);
+    path->distance += *Graph_getArc(graph, prev, station);
 
     // On libère la mémoire et on renvoit le path
     free(explored);
@@ -341,6 +339,5 @@ Path *Graph_tspFromACO(Graph *graph, int station, int iterationCount, int antCou
     }
 
     Graph_destroy(pheromones);
-
     return bestPath;
 }

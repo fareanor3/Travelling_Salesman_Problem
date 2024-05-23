@@ -1,6 +1,6 @@
 #include "Interface.h"
 
-void Creation_Point(FILE *fichier, float latitude, float longitude, char *name)
+void Creation_Point(FILE *fichier, float latitude, float longitude, char *name, bool fin)
 {
     fprintf(fichier, "\t \t{\n");
     fprintf(fichier, "\t \t \t\"type\": \"Feature\",\n");
@@ -17,7 +17,14 @@ void Creation_Point(FILE *fichier, float latitude, float longitude, char *name)
     fprintf(fichier, "\t \t \t \t},\n");
     fprintf(fichier, "\t \t \t \t\"name\": \"%s\"\n", name);
     fprintf(fichier, "\t \t \t}\n");
-    fprintf(fichier, "\t \t},\n");
+    if (fin)
+    {
+        fprintf(fichier, "\t \t}\n");
+    }
+    else
+    {
+        fprintf(fichier, "\t \t},\n");
+    }
 }
 
 void Creation_LineString(FILE *fichier, float latitude_1, float longitude_1, float latitude_2, float longitude_2)
@@ -42,29 +49,26 @@ void Creation_LineString(FILE *fichier, float latitude_1, float longitude_1, flo
     fprintf(fichier, "\t \t},\n");
 }
 
-int Creation_geojson(Path *path, int size)
+int Creation_geojson(Path *path, char *fichierCoord, int *tabSubToGraph, PathMatrix *matrix)
 {
-    int start = path->list->sentinel.next->value;
-    int end = path->list->sentinel.prev->value;
-    // Création de 2 tableaux afin d'avoir accès aux coordonnéees
-    float *lati = calloc(size, sizeof(float));
-    float *longi = calloc(size, sizeof(float));
-
-    FILE *coor = fopen("../TPF_Donnees/Data/laval_inter.txt", "r");
+    FILE *coor = fopen(fichierCoord, "r");
     if (coor == NULL)
     {
         printf("Problème dans l'ouverture du fichier de coordonées\n");
         return EXIT_FAILURE;
     }
+
     int nb_noeuds = 0;
     fscanf(coor, "%d", &nb_noeuds);
-    for (int i = 0; i < size; i++)
+
+    float *lati = calloc(nb_noeuds, sizeof(float));
+    float *longi = calloc(nb_noeuds, sizeof(float));
+    for (int i = 0; i < nb_noeuds; i++)
     {
         fscanf(coor, "%f %f", &lati[i], &longi[i]);
     }
-    // Pour les différents tests
-    float latitude_1 = 0, latitude_2 = 0, longitude_1 = 0, longitude_2 = 0;
-    // Ouverture du fichier + vérification qu'il est bien ouvert
+    fclose(coor);
+
     FILE *fichier = fopen("test_geojson.geojson", "w");
     if (fichier == NULL)
     {
@@ -74,60 +78,38 @@ int Creation_geojson(Path *path, int size)
         return EXIT_FAILURE;
     }
 
-    // On écrit dans le fichier
     fprintf(fichier, "{\n");
     fprintf(fichier, "\t\"type\": \"FeatureCollection\",\n");
     fprintf(fichier, "\t\"features\": [\n");
-    int nb_iter = 0;
-    // ça crée en boucle des lignes entre 2 points
-    for (ListIntNode *i = path->list->sentinel.next; i->value != end; i = i->next)
+    // initialisation du i en dehors de la boucle pour pouvoir le free après
+    ListIntIter *i = ListIntIter_create(path->list);
+
+    for (; ListIntIter_isValid(i) && (i->current->next != &path->list->sentinel); ListIntIter_next(i))
     {
-        // Pour récupérer les coordonées du point actuel et du suivant
-        // (Pour pouvoir tracer la ligne)
-        latitude_1 = lati[i->value];
-        longitude_1 = longi[i->value];
-        latitude_2 = lati[i->next->value];
-        longitude_2 = longi[i->next->value];
-
-        // Le tracé de la ligne entre le point actuel et le suivant
-        Creation_LineString(fichier, latitude_1, longitude_1, latitude_2, longitude_2);
-        nb_iter++;
+        // initialisation du j en dehors de la boucle pour pouvoir le free après, c'est le path à l'intersection de i et j (i et j sont des noeuds).
+        ListIntIter *j = ListIntIter_create(matrix->matrix[i->current->value][i->current->next->value].list);
+        for (; ListIntIter_isValid(j) &&
+               j->current->next !=
+                   j->sentinel;
+             ListIntIter_next(j)) // on est dans le path entre j  et j->next
+        {
+            int next = j->current->next->value;
+            Creation_LineString(fichier, lati[j->current->value], longi[j->current->value], lati[next], longi[next]);
+        }
+        ListIntIter_destroy(j);
+        Creation_Point(fichier, lati[tabSubToGraph[i->current->value]], longi[tabSubToGraph[i->current->value]], "Intersection", 0);
     }
-    printf("%d\n", nb_iter);
-    // Le tracé du point de début grâce à la fonction ;-)
-    latitude_1 = lati[start];
-    longitude_1 = longi[start];
+    float longitude = longi[tabSubToGraph[path->list->sentinel.next->value]];
+    float latitude = lati[tabSubToGraph[path->list->sentinel.next->value]];
     char *name = calloc(10, sizeof(char));
-    strcpy(name, "Start");
-    Creation_Point(fichier, latitude_1, longitude_1, name);
-
-    // Le dernier point, afin qu'il n'est pas de virgule pour dire que c'est le dernier
-    latitude_1 = lati[end];
-    longitude_1 = longi[end];
-    fprintf(fichier, "\t \t{\n");
-    fprintf(fichier, "\t \t \t\"type\": \"Feature\",\n");
-    fprintf(fichier, "\t \t \t\"geometry\": {\n");
-    fprintf(fichier, "\t \t \t \t\"type\": \"Point\",\n");
-    fprintf(fichier, "\t \t \t \t\"coordinates\": [%f, %f ]\n", latitude_1, longitude_1);
-    fprintf(fichier, "\t \t \t},\n");
-    fprintf(fichier, "\t \t \t\"properties\": {\n");
-    fprintf(fichier, "\t \t \t \t\"_umap_options\": {\n");
-    fprintf(fichier, "\t \t \t \t \t\"color\": \"#C91B0E\",\n");
-    fprintf(fichier, "\t \t \t \t \t\"weight\": 6,\n");
-    fprintf(fichier, "\t \t \t \t \t\"iconClass\": \"Drop\",\n");
-    fprintf(fichier, "\t \t \t \t \t\"showLabel\": null\n");
-    fprintf(fichier, "\t \t \t \t},\n");
-    fprintf(fichier, "\t \t \t \t\"name\": \"End\"\n");
-    fprintf(fichier, "\t \t \t}\n");
-    // Juste ici :-)
-    fprintf(fichier, "\t \t}\n");
-
-    // La fermeture du fichier après toutes les features
+    strcpy(name, "Start/End");
+    Creation_Point(fichier, latitude, longitude, name, 1);
     fprintf(fichier, "\t]\n");
     fprintf(fichier, "}\n");
-    free(name);
+    fclose(fichier);
+    ListIntIter_destroy(i);
     free(lati);
     free(longi);
-    fclose(fichier);
+    free(name);
     return EXIT_SUCCESS;
 }

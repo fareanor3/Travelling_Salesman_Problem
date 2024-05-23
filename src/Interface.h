@@ -4,13 +4,14 @@
 #include "Graph.h"
 #include "ListInt.h"
 #include "ShortestPath.h"
+#include "TSP.h"
 
 /// @brief Permet la création d'un point dans un fichier
 /// @param fichier le fichier geojson où il faut ajouter un point
 /// @param latitude la latitude du point
 /// @param longitude la longitude du point
 /// @param name le nom que l'on souhaite donner au point (visible sur la carte)
-void Creation_Point(FILE *fichier, float latitude, float longitude, char *name);
+void Creation_Point(FILE *fichier, float latitude, float longitude, char *name, bool fin);
 
 /// @brief Permet la création du ligne entre deux points dans un fichier
 /// @param fichier le fichier geojson où il faut ajouter une ligne
@@ -22,6 +23,8 @@ void Creation_LineString(FILE *fichier, float latitude_1, float longitude_1, flo
 
 /// @brief Fonction permettant la création d'un fichier geojson
 /// @param path le chemin qu'on veut voir tracé
-/// @param size le nombre de noeuds dans le graph
+/// @param fichierCoord le fichier contenant les coordonnées des noeuds
+/// @param tabSubToGraph le tableau de correspondance entre les noeuds du graphe et les noeuds du fichier de coordonnées
+/// @param matrix la matrice de chemins
 /// @return 0 si ça a fonctionné, 1 sinon
-int Creation_geojson(Path *path, int size);
+int Creation_geojson(Path *path, char *fichierCoord, int *tabSubToGraph, PathMatrix *matrix);

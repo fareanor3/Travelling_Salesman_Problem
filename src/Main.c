@@ -5,7 +5,7 @@
 #include "Interface.h"
 #include "TSP.h"
 
-#define File "../TPF_Donnees/Tests/5_Grande_instance/input.txt"
+#define File "../TPF_Donnees/Tests/4_TSP_ACO/input1.txt"
 
 int TestFonction(int NbTest)
 {
@@ -159,6 +159,7 @@ int main()
 
     ListInt *list = ListInt_create();
     PathMatrix *pathMatrix = PathMatrix_create(NbPoints);
+    int *tabSubToGraph = calloc(NbPoints, sizeof(int));
 
     for (int i = 0; i < NbPoints; i++)
     {
@@ -173,12 +174,20 @@ int main()
             return EXIT_FAILURE;
         }
         ListInt_insertLast(list, point);
+        tabSubToGraph[i] = point;
     }
 
     Graph *graph2 = Graph_getSubGraph(graph, list, pathMatrix);
     Path *path2 = Graph_tspFromACO(graph2, 0, 1000, 100, 2.0, 3.0, 0.1, 2.0);
     printf("Distance avec ACO : %.1f\n", path2->distance);
-    Creation_geojson(path2, path2->list->nodeCount);
+    char *fichier_coord = "../TPF_Donnees/Data/laval_inter.txt";
+    Path_print(path2);
+    int test = Creation_geojson(path2, fichier_coord, tabSubToGraph, pathMatrix);
+
+    if (test == 1)
+    {
+        printf("Les problèmes\n");
+    }
 
     for (ListIntNode *pnt = path2->list->sentinel.next; pnt != &path2->list->sentinel; pnt = pnt->next)
     {
@@ -189,6 +198,7 @@ int main()
     Path_destroy(path2);
     Graph_destroy(graph);
     ListInt_destroy(list);
+    free(tabSubToGraph);
     PathMatrix_destroy(pathMatrix);
     Graph_destroy(graph2);
 
