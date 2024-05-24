@@ -106,8 +106,8 @@ int TestFonction(int NbTest)
     }
     printf("\n");
 
-    int réussiteGéo = Creation_geojson(path3, CoordFile, tabtoGraph, pathMatrix);
-    if (réussiteGéo == EXIT_FAILURE)
+    int reussiteGeo = Creation_geojson(path3, CoordFile, tabtoGraph, pathMatrix);
+    if (reussiteGeo == EXIT_FAILURE)
     {
         printf("Erreur en créant le fichier geojson\n");
     }
@@ -188,6 +188,7 @@ int main()
     {
         printf("%d ", pnt->value);
     }
+    printf("\n");
 
     printf("\n");
     Path_destroy(path);

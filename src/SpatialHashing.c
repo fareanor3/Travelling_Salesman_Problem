@@ -35,8 +35,9 @@ Point *NearestPointFromCSV(char *filename, int code_postal)
 
     while (fgets(line, sizeof(line), file))
     {
-        int postal_code;
-        float latitude, longitude;
+        int postal_code = 0;
+        float latitude = 0.0f;
+        float longitude = 0.0f;
         char *token;
 
         // Va directement au code postal

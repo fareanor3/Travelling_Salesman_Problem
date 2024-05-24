@@ -15,7 +15,7 @@
 
 ## Options de compilation :
 ```bash
-gcc -Wall *.c -lm -o3
+gcc -Wall *.c -lm -O3
 ```
 
 ## Performance :
