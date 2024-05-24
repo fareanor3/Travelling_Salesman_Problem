@@ -303,7 +303,7 @@ int Passage_PathMatrix()
     {
         for (int j = 0; j < nb_points; j++)
         {
-            printf("%d %d %.1f\n", i, j, pathMatrix->matrix[i][j].distance);
+            printf("%d %d %.1f\n", i, j, pathMatrix->matrix[i][j]->distance);
         }
     }
     free(fpath);

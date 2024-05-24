@@ -40,7 +40,7 @@ void Creation_LineString(FILE *fichier, float latitude_1, float longitude_1, flo
     fprintf(fichier, "\t \t \t},\n");
     fprintf(fichier, "\t \t \t\"properties\": {\n");
     fprintf(fichier, "\t \t \t \t\"_umap_options\": {\n");
-    fprintf(fichier, "\t \t \t \t \t\"color\": \"#9C27B0\",\n");
+    fprintf(fichier, "\t \t \t \t \t\"color\": \"#130E0A\",\n");
     fprintf(fichier, "\t \t \t \t \t\"weight\": 6,\n");
     fprintf(fichier, "\t \t \t \t \t\"showLabel\": null\n");
     fprintf(fichier, "\t \t \t \t},\n");
@@ -84,20 +84,18 @@ int Creation_geojson(Path *path, char *fichierCoord, int *tabSubToGraph, PathMat
     // initialisation du i en dehors de la boucle pour pouvoir le free après
     ListIntIter *i = ListIntIter_create(path->list);
 
-    for (; ListIntIter_isValid(i) && (i->current->next != &path->list->sentinel); ListIntIter_next(i))
+    for (; ListIntIter_isValid(i) && i->current->next != i->sentinel; ListIntIter_next(i)) // on est dans le path entre i et i->next
     {
         // initialisation du j en dehors de la boucle pour pouvoir le free après, c'est le path à l'intersection de i et j (i et j sont des noeuds).
-        ListIntIter *j = ListIntIter_create(matrix->matrix[i->current->value][i->current->next->value].list);
-        for (; ListIntIter_isValid(j) &&
-               j->current->next !=
-                   j->sentinel;
-             ListIntIter_next(j)) // on est dans le path entre j  et j->next
+        ListIntIter *j = ListIntIter_create(matrix->matrix[i->current->value][i->current->next->value]->list);
+        for (; ListIntIter_isValid(j) && j->current->next != j->sentinel; ListIntIter_next(j)) // on est dans le path entre j  et j->next
         {
             int next = j->current->next->value;
             Creation_LineString(fichier, lati[j->current->value], longi[j->current->value], lati[next], longi[next]);
         }
         ListIntIter_destroy(j);
-        Creation_Point(fichier, lati[tabSubToGraph[i->current->value]], longi[tabSubToGraph[i->current->value]], "Intersection", 0);
+        bool fin = false;
+        Creation_Point(fichier, lati[tabSubToGraph[i->current->value]], longi[tabSubToGraph[i->current->value]], "Intersection", fin);
     }
     float longitude = longi[tabSubToGraph[path->list->sentinel.next->value]];
     float latitude = lati[tabSubToGraph[path->list->sentinel.next->value]];

@@ -5,11 +5,10 @@ PathMatrix *PathMatrix_create(int size)
     PathMatrix *matrix = (PathMatrix *)calloc(1, sizeof(PathMatrix));
     AssertNew(matrix);
     matrix->size = size;
-    matrix->matrix = (Path **)calloc(size, sizeof(Path *));
+    matrix->matrix = (Path ***)calloc(size, sizeof(Path **));
     for (int i = 0; i < size; i++)
     {
-        matrix->matrix[i] = (Path *)calloc(size, sizeof(Path));
-        AssertNew(matrix->matrix[i]);
+        matrix->matrix[i] = (Path **)calloc(size, sizeof(Path *));
     }
     return matrix;
 }
@@ -23,7 +22,10 @@ void PathMatrix_destroy(PathMatrix *matrix)
     {
         for (int j = 0; j < matrix->size; j++)
         {
-            ListInt_destroy(matrix->matrix[i][j].list);
+            if (matrix->matrix[i][j] != NULL)
+            {
+                Path_destroy(matrix->matrix[i][j]);
+            }
         }
         free(matrix->matrix[i]);
     }
@@ -38,7 +40,7 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
     int size = graph->size;
     if ((station < 0) || (station >= size) || (graph == NULL))
     {
-        printf("Problem with the starting vertex or the graph");
+        printf("Problème avec la station ou le graphe\n");
         return NULL;
     }
     int prev = station;
@@ -47,7 +49,7 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
     Path *tournee = Path_create(station);
     if (tournee == NULL)
     {
-        printf("Problem with creating the path");
+        printf("Problème avec la création du path\n");
         return NULL;
     }
 
@@ -55,7 +57,7 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
     bool *passage = (bool *)calloc(size, sizeof(bool));
     if (passage == NULL)
     {
-        printf("Problème avec l'allocation du tableau passage");
+        printf("Problème avec l'allocation du tableau passage\n");
         Path_destroy(tournee);
         return NULL;
     }
@@ -71,7 +73,7 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
         ArcList *arclist = Graph_getArcList(graph, prev);
         if (arclist == NULL)
         {
-            printf("Problème avec la liste des arcs");
+            printf("Problème avec la liste des arcs\n");
             free(passage);
             Path_destroy(tournee);
             return NULL;
@@ -90,7 +92,7 @@ Path *Graph_tspFromHeuristic(Graph *graph, int station)
 
         if (follower == -1)
         {
-            printf("Aucun point suivant trouvé, il y a peut-être un problème dans le graph");
+            printf("Aucun point suivant trouvé, il y a peut-être un problème dans le graph\n");
             free(passage);
             Path_destroy(tournee);
             return NULL;
@@ -136,25 +138,21 @@ Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix)
     for (int i = 0; i < size; i++)
     {
         // on récupère l'id du point
-        for (int j = 0; j < size; j++)
+        for (int j = i + 1; j < size; j++)
         {
-            // si c'est le même point, on met la distance à 0
-            if (i == j)
-            {
-                pathMatrix->matrix[i][j].distance = 0.f;
-            }
             // sinon on récupère le chemin le plus court entre les deux points
             // et on met la distance dans la matrice
-            else if (i < j)
             {
                 int id1 = ListInt_get(list, i);
                 int id2 = ListInt_get(list, j);
                 Path *path = Graph_shortestPath(graph, id1, id2);
-                pathMatrix->matrix[i][j] = *path;
-                pathMatrix->matrix[j][i] = *path;
+                Path *inversePath = InversePath(path);
+                pathMatrix->matrix[i][j] = path;
+                pathMatrix->matrix[j][i] = inversePath;
+                if (path->distance != inversePath->distance)
+                    printf("Problème avec les chemins");
                 Graph_setArc(subGraph, i, j, path->distance);
-                Graph_setArc(subGraph, j, i, path->distance);
-                free(path);
+                Graph_setArc(subGraph, j, i, inversePath->distance);
             }
         }
     }
@@ -184,6 +182,10 @@ float *Graph_acoGetProbabilities(Graph *graph, Graph *pheromones, int station, b
     for (int i = 0; i < size; i++)
     {
         probabilities[i] /= sum;
+        if (probabilities[i] < 1e-20f) // On évite les erreurs d'arrondi
+        {
+            probabilities[i] = 0.f;
+        }
     }
     // On renvoit le tableau de probabilités
     return probabilities;
@@ -340,4 +342,17 @@ Path *Graph_tspFromACO(Graph *graph, int station, int iterationCount, int antCou
 
     Graph_destroy(pheromones);
     return bestPath;
+}
+
+Path *InversePath(Path *path)
+{
+    Path *inversePath = Path_create(path->list->sentinel.next->value);
+    ListIntIter *iter = ListIntIter_create(path->list);
+    for (; ListIntIter_isValid(iter) && iter->current->next != iter->sentinel; ListIntIter_next(iter))
+    {
+        ListInt_insertFirst(inversePath->list, iter->current->next->value);
+    }
+    inversePath->distance = path->distance;
+    ListIntIter_destroy(iter);
+    return inversePath;
 }

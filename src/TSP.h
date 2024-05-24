@@ -8,7 +8,7 @@
 
 typedef struct PathMatrix
 {
-    Path **matrix;
+    Path ***matrix;
     int size;
 } PathMatrix;
 
@@ -74,8 +74,13 @@ void Graph_acoPheromoneUpdatePath(Graph *const pheromones, Path *const path, flo
 void Graph_acoPheromoneGlobalUpdate(Graph *const pheromones, float rho);
 
 /// @brief Obtenir le sous-graphe de graph
-/// @param graph la graph dont on ne veut garder que les points d'intérêts
+/// @param graph le graph dont on ne veut garder que les points d'intérêts
 /// @param list la liste des points à parcourir
 /// @param pathMatrix une matrice des chemins
 /// @return le sous-graph
 Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix);
+
+// @brief Crée un chemin inverse
+// @param path le chemin à inverser
+// @return le chemin inversé
+Path *InversePath(Path *path);
