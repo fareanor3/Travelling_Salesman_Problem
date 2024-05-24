@@ -213,6 +213,42 @@ void ListInt_concatenate(ListInt *list1, ListInt *list2)
     sentinel2->prev = sentinel2;
 }
 
+void ListInt_permute(ListInt *list, int indice1, int indice2)
+{
+    // Vérification des valeurs données au début
+    if (list == NULL)
+    {
+        printf("Problème avec la liste\n");
+        return;
+    }
+    if ((indice1 > (list->nodeCount - 1)) || (indice2 > (list->nodeCount - 1)))
+    {
+        printf("L'indice est plus haut que la quantité de point dans la liste\n");
+        return;
+    }
+    ListIntIter *iter1 = ListIntIter_create(list);
+    ListIntIter *iter2 = ListIntIter_create(list);
+    for (int i = 0; i < indice1; i++)
+        ListIntIter_next(iter1);
+    for (int i = 0; i < indice2; i++)
+        ListIntIter_next(iter2);
+
+    int tmp = iter1->current->value;
+    iter1->current->value = iter2->current->value;
+    iter2->current->value = tmp;
+
+    // On vérifie si l'indice 1 ou 2 sont la première valeur de la liste afin de changer la dernière valeur
+    if (indice1 == 0)
+        list->sentinel.prev->value = iter1->current->value;
+    else if (indice2 == 0)
+        list->sentinel.prev->value = iter2->current->value;
+
+    ListIntIter_destroy(iter1);
+    ListIntIter_destroy(iter2);
+}
+
+//--------------------------------------------------------------------------------------------------
+
 ListIntIter *ListIntIter_create(ListInt *list)
 {
     assert(list);

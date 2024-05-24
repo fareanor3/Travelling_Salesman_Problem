@@ -84,3 +84,26 @@ Graph *Graph_getSubGraph(Graph *graph, ListInt *list, PathMatrix *pathMatrix);
 // @param path le chemin à inverser
 // @return le chemin inversé
 Path *InversePath(Path *path);
+
+/// @brief Calcule la distance d'un chemin sur un graph donné
+/// @param path le chemin dont on cherche la distance
+/// @param graph le graph qui donne le poids des arcs
+/// @return le chemin avec une distance correctement allouée
+Path *Graph_VerifyPathDistance(Path *path, Graph *graph);
+
+/*
+-----------------SNIF SNIF------------------------------------------------------------------------------------------
+/// @brief l'appel récursif afin de de calculer la tournée parfaite
+/// @param nb_node le nombre de node
+/// @param tournee le chemin que l'on teste
+/// @param graph le graph avec les nodes
+/// @param best_tournee le meilleur chemin actullement trouvé
+/// @return Renvoie le path afin de tester s'il est optimal
+Path *Graph_tspFromBrutForce_Recursive(int nb_node, Path *tournee, Graph *graph, Path *best_tournee, float dist_min);
+
+/// @brief Calcule la tournée parfaite quand le nombre de noeuds est inférieur ou égale à 8.
+/// @param graph le graph des distances. Il doit être complet.
+/// @param station l'identifiant du sommet de départ et d'arrivée de la tournée.
+/// @return La tournée.
+Path *Graph_tspFromBrutForce(Graph *graph);
+*/

@@ -356,3 +356,347 @@ Path *InversePath(Path *path)
     ListIntIter_destroy(iter);
     return inversePath;
 }
+
+Path *Graph_VerifyPathDistance(Path *path, Graph *graph)
+{
+    if ((path == NULL) || (graph == NULL) || (path->list == NULL))
+    {
+        printf("Le path ou le graph ou la list du path n'existe pas\n");
+        return NULL;
+    }
+    ListIntIter *iter = ListIntIter_create(path->list);
+    float ecart = 0.f;
+    for (int i = 0; i < path->list->nodeCount - 1; i++)
+    {
+        ArcList *arclist = Graph_getArcList(graph, iter->current->value);
+        if (iter->current->next->value == iter->current->value)
+        {
+            printf("DID I FOUND THE PROBLEM ?\n");
+            return NULL;
+        }
+        while (arclist->target != iter->current->next->value)
+            arclist = arclist->next;
+        ecart += arclist->weight;
+        ListIntIter_next(iter);
+    }
+    path->distance = ecart;
+    ListIntIter_destroy(iter);
+    return path;
+}
+/*
+-------------------------TENTATIVE 2---------------------------------------------------------------------------
+Path *Graph_tspFromBrutForce_Recursive(int nb_node, Path *tournee, Graph *graph, Path *best_tournee, float dist_min)
+{
+
+    if (nb_node == 1)
+        return best_tournee;
+    else
+    {
+        // printf("NOIRS\n");
+        for (int i = 0; i < nb_node; i++)
+        {
+            // On vérifie si on a trouvé une meilleure tournée
+            if (tournee->distance > dist_min)
+            {
+                // printf("QUI VIENNENT\n");
+                Graph_tspFromBrutForce_Recursive(nb_node - 1, tournee, graph, best_tournee, dist_min);
+                // Si c'est un nombre impair
+                if (nb_node % 2 == 1)
+                {
+                    // printf("DU NORD\n");
+                    ListInt_permute(tournee->list, 0, nb_node - 1);
+                    // printf("COLORENT LA TERRE\n");
+                    Graph_VerifyPathDistance(tournee, graph);
+                    // printf("LES LACS LES RIVIERES\n");
+                }
+                else
+                {
+                    ListInt_permute(tournee->list, i, nb_node - 1);
+                    Graph_VerifyPathDistance(tournee, graph);
+                }
+            }
+            else
+            {
+                printf("C'EST LE DECOR\n");
+                best_tournee = tournee;
+                dist_min = best_tournee->distance;
+                Graph_tspFromBrutForce_Recursive(nb_node - 1, tournee, graph, best_tournee, dist_min);
+                // Si c'est un nombre impair
+                if (nb_node % 2 == 1)
+                {
+                    ListInt_permute(tournee->list, 0, nb_node - 1);
+                    Graph_VerifyPathDistance(tournee, graph);
+                }
+                else
+                {
+                    ListInt_permute(tournee->list, i, nb_node - 1);
+                    Graph_VerifyPathDistance(tournee, graph);
+                }
+            }
+        }
+        printf("Mes couilles\n");
+        return tournee;
+    }
+}
+
+Path *Graph_tspFromBrutForce(Graph *graph)
+{
+    // Vérification d'usage
+    if (graph == NULL)
+    {
+        printf("Problème avec le graph\n");
+        return NULL;
+    }
+    // Avec Heap pour faire les permutations
+
+    Path *tournee = Path_create(0);
+    Path *best_tournee = Path_create(0);
+    if ((best_tournee == NULL) || (tournee == NULL))
+    {
+        printf("Problème avec la création des chemins\n");
+        return NULL;
+    }
+
+    float dist_min = INFINITY;
+
+    for (int i = 1; i < graph->size; i++)
+    {
+        ListInt_insertLast(tournee->list, i);
+
+        ListInt_insertLast(best_tournee->list, i);
+    }
+    ListInt_insertLast(tournee->list, 0);
+    ListInt_insertLast(best_tournee->list, 0);
+    printf("DES\n");
+    Graph_VerifyPathDistance(tournee, graph);
+    Graph_VerifyPathDistance(best_tournee, graph);
+    printf("NUAGES\n");
+    printf("%d\n", graph->size);
+    best_tournee = Graph_tspFromBrutForce_Recursive(graph->size, tournee, graph, best_tournee, dist_min);
+    printf("DU CONNEMARA\n");
+    if (best_tournee == NULL)
+    {
+        printf("Ze crois que z'ai trouvé le problème\n");
+        return NULL;
+    }
+    Path_destroy(tournee);
+    return best_tournee;
+}
+
+
+-------------------------TENTATIVE 1---------------------------------------------------------------------
+// Non fonctionnel (tourne en boucle)
+
+Path *Graph_tspFromBrutForce(Graph *graph)
+{
+    // Vérification d'usage
+    if (graph == NULL)
+    {
+        printf("Problème avec le graph\n");
+        return NULL;
+    }
+
+    Path *best_tournee = Path_create(0);
+
+    if ((best_tournee == NULL))
+    {
+        printf("Problème avec la création des chemins\n");
+        return NULL;
+    }
+
+    float distance_min = INFINITY;
+    int factor = 1;
+    int size = graph->size;
+
+    // On calcule combien de chemin on est sensé avoir par point de départ
+    for (int i = size; i > 1; i--)
+        factor *= i;
+    // printf("%d\n", factor);
+    for (int i = 0; i < graph->size; i++)
+    {
+        Path *tournee = Path_create(i);
+        ListInt_insertFirst(tournee->list, i);
+        bool first2 = true, first3 = true, first4 = true, first5 = true, first6 = true, first7 = true;
+        int tmp = 0;
+
+        for (int j = 0; j < graph->size; j++)
+        {
+            if (j == i)
+                continue;
+
+            if (first2)
+            {
+                ListIntNode *node2 = calloc(1, sizeof(ListIntNode));
+                node2->next = NULL;
+                node2->prev = NULL;
+                node2->value = j;
+                ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next, node2);
+                tournee->distance += *Graph_getArc(graph, i, j);
+            }
+            else
+            {
+                while (tournee->list->nodeCount > 2)
+                    tmp = ListInt_popLast(tournee->list);
+                ListIntNode *node2 = calloc(1, sizeof(ListIntNode));
+                node2->next = NULL;
+                node2->prev = NULL;
+                node2->value = j;
+                ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next, node2);
+                tournee->distance += *Graph_getArc(graph, i, j);
+            }
+
+            for (int k = 0; k < graph->size; k++)
+            {
+                if (graph->size < 3)
+                    break;
+                if ((k == j) || (k == i))
+                    continue;
+                if (first3)
+                {
+                    ListIntNode *node3 = calloc(1, sizeof(ListIntNode));
+                    node3->next = NULL;
+                    node3->prev = NULL;
+                    node3->value = j;
+                    ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next, node3);
+                    tournee->distance += *Graph_getArc(graph, j, k);
+                }
+                else
+                {
+                    while (tournee->list->nodeCount > 3)
+                        tmp = ListInt_popLast(tournee->list);
+                    ListIntNode *node3 = calloc(1, sizeof(ListIntNode));
+                    node3->next = NULL;
+                    node3->prev = NULL;
+                    node3->value = j;
+                    ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next, node3);
+                    tournee->distance += *Graph_getArc(graph, j, k);
+                }
+
+                for (int l = 0; l < graph->size; k++)
+                {
+                    if (graph->size < 4)
+                        break;
+                    if ((l == j) || (l == i) || (l == k))
+                        continue;
+                    if (first4)
+                    {
+                        ListIntNode *node4 = calloc(1, sizeof(ListIntNode));
+                        node4->next = NULL;
+                        node4->prev = NULL;
+                        node4->value = j;
+                        ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next->next, node4);
+                        tournee->distance += *Graph_getArc(graph, k, l);
+                    }
+                    else
+                    {
+                        while (tournee->list->nodeCount > 4)
+                            tmp = ListInt_popLast(tournee->list);
+                        ListIntNode *node4 = calloc(1, sizeof(ListIntNode));
+                        node4->next = NULL;
+                        node4->prev = NULL;
+                        node4->value = j;
+                        ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next->next, node4);
+                        tournee->distance += *Graph_getArc(graph, k, l);
+                    }
+
+                    for (int m = 0; m < graph->size; m++)
+                    {
+                        if (graph->size < 5)
+                            break;
+                        if ((m == j) || (m == i) || (m == k) || (m == l))
+                            continue;
+                        if (first5)
+                        {
+                            ListIntNode *node5 = calloc(1, sizeof(ListIntNode));
+                            node5->next = NULL;
+                            node5->prev = NULL;
+                            node5->value = j;
+                            ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next->next->next, node5);
+                            tournee->distance += *Graph_getArc(graph, l, m);
+                        }
+                        else
+                        {
+                            while (tournee->list->nodeCount > 5)
+                                tmp = ListInt_popLast(tournee->list);
+                            ListIntNode *node5 = calloc(1, sizeof(ListIntNode));
+                            node5->next = NULL;
+                            node5->prev = NULL;
+                            node5->value = j;
+                            ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next->next->next, node5);
+                            tournee->distance += *Graph_getArc(graph, l, m);
+                        }
+
+                        for (int n = 0; n < graph->size; n++)
+                        {
+                            if (graph->size < 6)
+                                break;
+                            if ((n == j) || (n == i) || (n == k) || (n == l) || (n == m))
+                                continue;
+                            if (first6)
+                            {
+                                ListIntNode *node6 = calloc(1, sizeof(ListIntNode));
+                                node6->next = NULL;
+                                node6->prev = NULL;
+                                node6->value = j;
+                                ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next->next->next->next, node6);
+                                tournee->distance += *Graph_getArc(graph, m, n);
+                            }
+                            else
+                            {
+                                while (tournee->list->nodeCount > 6)
+                                    tmp = ListInt_popLast(tournee->list);
+                                ListIntNode *node6 = calloc(1, sizeof(ListIntNode));
+                                node6->next = NULL;
+                                node6->prev = NULL;
+                                node6->value = j;
+                                ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next->next->next->next, node6);
+                                tournee->distance += *Graph_getArc(graph, m, n);
+                            }
+
+                            for (int o = 0; o < graph->size; o++)
+                            {
+                                if (graph->size < 7)
+                                    break;
+                                if ((o == j) || (o == i) || (o == k) || (o == l) || (o == m))
+                                    continue;
+                                if (first7)
+                                {
+                                    ListIntNode *node7 = calloc(1, sizeof(ListIntNode));
+                                    node7->next = NULL;
+                                    node7->prev = NULL;
+                                    node7->value = j;
+                                    ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next->next->next->next->next, node7);
+                                    tournee->distance += *Graph_getArc(graph, n, o);
+                                }
+                                else
+                                {
+                                    while (tournee->list->nodeCount > 7)
+                                        tmp = ListInt_popLast(tournee->list);
+                                    ListIntNode *node7 = calloc(1, sizeof(ListIntNode));
+                                    node7->next = NULL;
+                                    node7->prev = NULL;
+                                    node7->value = j;
+                                    ListInt_insertNodeAfter(tournee->list, tournee->list->sentinel.next->next->next->next->next->next, node7);
+                                    tournee->distance += *Graph_getArc(graph, n, o);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ListInt_insertLast(tournee->list, i);
+        tournee->distance += *Graph_getArc(graph, tournee->list->sentinel.prev->prev->value, i);
+        // On vérifie si la distance de la tournée actuelle est inférieur à celle qu'on a gardé en mémoire (en vérifiant que la distance n'est pas égale à 0)
+        if ((tournee->distance < distance_min) && (tournee->distance != 0.0f))
+        {
+            best_tournee = tournee;
+            distance_min = best_tournee->distance;
+        }
+        Path_destroy(tournee);
+    }
+
+    // On renvoit la meilleure tournée (celle avec la distance la plus courte)
+    return best_tournee;
+}
+*/
