@@ -4,8 +4,10 @@
 #include "ShortestPath.h"
 #include "Interface.h"
 #include "TSP.h"
+#include "SpatialHashing.h"
 
-#define File "../TPF_Donnees/Tests/4_TSP_ACO/input1.txt"
+#define File "../TPF_Donnees/Tests/5_Grande_instance/input.txt"
+#define CsvFile "../TPF_Donnees/Data/communes-departement-region.csv"
 
 int TestFonction(int NbTest)
 {
@@ -50,6 +52,7 @@ int TestFonction(int NbTest)
     }
 
     ListInt *list = ListInt_create();
+    int *tabtoGraph = calloc(NbPoints, sizeof(int));
     PathMatrix *pathMatrix = PathMatrix_create(NbPoints);
 
     for (int i = 0; i < NbPoints; i++)
@@ -65,6 +68,7 @@ int TestFonction(int NbTest)
             return EXIT_FAILURE;
         }
         ListInt_insertLast(list, point);
+        tabtoGraph[i] = point;
     }
     Graph *graph2 = Graph_getSubGraph(graph, list, pathMatrix);
 
@@ -102,12 +106,19 @@ int TestFonction(int NbTest)
     }
     printf("\n");
 
+    int réussiteGéo = Creation_geojson(path3, CoordFile, tabtoGraph, pathMatrix);
+    if (réussiteGéo == EXIT_FAILURE)
+    {
+        printf("Erreur en créant le fichier geojson\n");
+    }
+
     Path_destroy(path2);
     Graph_destroy(graph);
     ListInt_destroy(list);
     PathMatrix_destroy(pathMatrix);
     Graph_destroy(graph2);
     Path_destroy(path3);
+    free(tabtoGraph);
 
     return EXIT_SUCCESS;
 }
@@ -116,96 +127,70 @@ int main()
 {
     srand((unsigned int)time(NULL));
 
-    // for (int i = 1; i < 5; i++)
-    // {
-    //     printf("###### Test %d ######\n", i);
-    //     TestFonction(i);
-    //     printf("\n");
-    // }
-
-    // demarre un timer
-    clock_t start = clock();
-
-    // test sur l'instance 5 (grande instance)
-    // Distance avec ACO : 4381038.5
-    // 0 30 15 35 21 23 34 27 10 4 19 7 33 11 22 32 14 16 17 13 31 9 3 12 2 6 8 20 5 28 36 26 25 18 29 24 1 0
-    // Time spent: 358.239159
-    printf("###### Test 5 ######\n");
-    FILE *file = fopen(File, "r");
-    if (file == NULL)
+    for (int i = 1; i < 2; i++)
     {
-        printf("Error opening the file\n");
-        return EXIT_FAILURE;
+        clock_t start = clock();
+        printf("###### Test %d ######\n", i);
+        TestFonction(i);
+        clock_t end = clock();
+        double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
+        printf("Time spent: %f\n", time_spent);
+        printf("\n");
     }
 
-    char GraphFile[256];
-    char CoordFile[256];
-    int NbPoints = 0;
-
-    if (fscanf(file, "%s", GraphFile) != 1 || fscanf(file, "%s", CoordFile) != 1 || fscanf(file, "%d", &NbPoints) != 1)
+    printf("###### Welcome in to the Global ProblemS System.e.s ######\n");
+    printf("\t\t Please choose a Code Postal :\n");
+    int code_postal = 0;
+    scanf("%d", &code_postal);
+    Point *point = NearestPointFromCSV(CsvFile, code_postal);
+    if (point == NULL)
     {
-        printf("Error reading from the file\n");
-        fclose(file);
+        printf("Error in the postal code\n");
         return EXIT_FAILURE;
     }
-
-    Graph *graph = Graph_load(GraphFile);
+    printf("The nearest point is : %f %f\n", point->latitude, point->longitude);
+    int index = CoordToGraphIndex(point, "../TPF_Donnees/Data/france_inter.txt");
+    if (index == EXIT_FAILURE)
+    {
+        printf("Error in the index\n");
+        return EXIT_FAILURE;
+    }
+    printf("\t\t Please choose another Code Postal :\n");
+    scanf("%d", &code_postal);
+    Point *point2 = NearestPointFromCSV(CsvFile, code_postal);
+    if (point2 == NULL)
+    {
+        printf("Error in the postal code\n");
+        return EXIT_FAILURE;
+    }
+    printf("The nearest point is : %f %f\n", point2->latitude, point2->longitude);
+    int index2 = CoordToGraphIndex(point2, "../TPF_Donnees/Data/france_inter.txt");
+    if (index2 == EXIT_FAILURE)
+    {
+        printf("Error in the index\n");
+        return EXIT_FAILURE;
+    }
+    Graph *graph = Graph_load("../TPF_Donnees/Data/france_graph.txt");
     if (graph == NULL)
     {
         printf("Error loading the graph\n");
-        fclose(file);
         return EXIT_FAILURE;
     }
-
-    ListInt *list = ListInt_create();
-    PathMatrix *pathMatrix = PathMatrix_create(NbPoints);
-    int *tabSubToGraph = calloc(NbPoints, sizeof(int));
-
-    for (int i = 0; i < NbPoints; i++)
+    Path *path = Graph_shortestPath(graph, index, index2);
+    if (path == NULL)
     {
-        int point;
-        if (fscanf(file, "%d", &point) != 1)
-        {
-            printf("Error reading point from the file\n");
-            ListInt_destroy(list);
-            PathMatrix_destroy(pathMatrix);
-            Graph_destroy(graph);
-            fclose(file);
-            return EXIT_FAILURE;
-        }
-        ListInt_insertLast(list, point);
-        tabSubToGraph[i] = point;
+        printf("Error in the path\n");
+        return EXIT_FAILURE;
     }
-
-    Graph *graph2 = Graph_getSubGraph(graph, list, pathMatrix);
-    Path *path2 = Graph_tspFromACO(graph2, 0, 1000, 100, 2.0, 3.0, 0.1, 2.0);
-    printf("Distance avec ACO : %.1f\n", path2->distance);
-    char *fichier_coord = "../TPF_Donnees/Data/laval_inter.txt";
-    Path_print(path2);
-    int test = Creation_geojson(path2, fichier_coord, tabSubToGraph, pathMatrix);
-
-    if (test == 1)
-    {
-        printf("Les problèmes\n");
-    }
-
-    for (ListIntNode *pnt = path2->list->sentinel.next; pnt != &path2->list->sentinel; pnt = pnt->next)
+    printf("The distance is : %.1f\n", path->distance);
+    printf("The path is : ");
+    for (ListIntNode *pnt = path->list->sentinel.next; pnt != &path->list->sentinel; pnt = pnt->next)
     {
         printf("%d ", pnt->value);
     }
+
     printf("\n");
-
-    Path_destroy(path2);
-    Graph_destroy(graph);
-    ListInt_destroy(list);
-    free(tabSubToGraph);
-    PathMatrix_destroy(pathMatrix);
-    Graph_destroy(graph2);
-
-    // arrete le timer
-    clock_t end = clock();
-    double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
-    printf("Time spent: %f\n", time_spent);
+    Path_destroy(path);
 
     return EXIT_SUCCESS;
 }
