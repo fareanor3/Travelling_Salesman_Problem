@@ -49,7 +49,7 @@ bool ListInt_isEmpty(ListInt *list);
 /// @param list la liste.
 void ListInt_print(ListInt *list);
 
-/// @brief Renvoie le noeud d'une liste à un index donné.
+/// @brief Renvoie la valeur d'un noeud d'une liste à l'indice donné.
 /// @param list la liste.
 /// @param index l'index du noeud.
 int ListInt_get(ListInt *list, int index);
@@ -151,6 +151,12 @@ ListInt *ListInt_copy(ListInt *list);
 /// @param list1 la première liste.
 /// @param list2 la seconde liste.
 void ListInt_concatenate(ListInt *list1, ListInt *list2);
+
+/// @brief Echange la position de deux nodes dans la liste
+/// @param list la liste dont on veut échanger deux nodes
+/// @param value1 l'indice de la première node à échanger
+/// @param value2 l'indice de la deuxième node à échanger
+void ListInt_permute(ListInt *list, int indice1, int indice2);
 
 //--------------------------------------------------------------------------------------------------
 // Itérateur sur une liste d'entiers
